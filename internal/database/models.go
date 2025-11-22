@@ -10,6 +10,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type RefreshToken struct {
+	CreateRefreshTokenParams
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	RevokedAt *time.Time `json:"revoked_at"`
+	
+}
+
 type User struct {
 	ID                  uuid.UUID
 	FirstName           string
@@ -22,3 +30,6 @@ type User struct {
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
 }
+
+
+

@@ -17,6 +17,7 @@ import (
 type ApiConfig struct {
 	apiHits   atomic.Int32
 	dbQueries *database.Queries
+	jwtSecret string
 }
 
 func (cfg *ApiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
