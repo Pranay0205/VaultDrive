@@ -52,7 +52,11 @@ func main() {
 	fmt.Println("Connected to the database successfully.")
 
 	mux := http.NewServeMux()
-	mux.Handle("/healthz", apiConfig.middlewareMetricsInc(http.HandlerFunc(healthCheckHandler)))
+	mux.Handle("GET /healthz", apiConfig.middlewareMetricsInc(http.HandlerFunc(healthCheckHandler)))
+
+	mux.Handle("POST /register", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.registerUserHandler)))
+
+	mux.Handle("GET /user-by-username", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.getUserByUsernameHandler)))
 
 	fmt.Printf("Starting server on port %s...\n", port)
 	err = http.ListenAndServe(":"+port, mux)

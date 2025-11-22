@@ -18,4 +18,9 @@ dev:
 build-prod:
 	go build -ldflags="-w -s" -o out
 
+# Connect to the database
+db-connect:
+	psql -h localhost -U postgres -d vaultdrive
+
+
 .PHONY: run build clean dev build-prod

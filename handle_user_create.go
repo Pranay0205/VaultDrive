@@ -1,11 +1,17 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"log"
 	"net/http"
+	"time"
+
+	"github.com/Pranay0205/VaultDrive/auth"
+	"github.com/Pranay0205/VaultDrive/internal/database"
 )
 
-func (cfg *ApiConfig) registerUserHandler(r http.ResponseWriter, req *http.Request) {
+func (cfg *ApiConfig) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	var newUser struct {
 		FirstName string `json:"first_name"`
 		LastName  string `json:"last_name"`
@@ -14,12 +20,58 @@ func (cfg *ApiConfig) registerUserHandler(r http.ResponseWriter, req *http.Reque
 		Password  string `json:"password"`
 	}
 
-	err := json.NewDecoder(req.Body).Decode(&newUser)
+	err := json.NewDecoder(r.Body).Decode(&newUser)
 	if err != nil {
-		http.Error(r, "Invalid request payload", http.StatusBadRequest)
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
-	// To Do : Add user to database
-	// value, err := cfg.dbQueries.CreateUser(context.Background(), database.CreateUserParams{})
 
+	hashedPassword, err := auth.HashPassword(newUser.Password)
+	if err != nil {
+		log.Printf("Error retrieving user: %v", err)
+		http.Error(w, "Error creating user", http.StatusInternalServerError)
+		return
+	}
+
+	user, err := cfg.dbQueries.CreateUser(context.Background(), database.CreateUserParams{
+		FirstName:           newUser.FirstName,
+		LastName:            newUser.LastName,
+		Username:            newUser.Username,
+		Email:               newUser.Email,
+		PasswordHash:        hashedPassword,
+		PublicKey:           "temp_key",
+		PrivateKeyEncrypted: "temp_encrypted",
+		CreatedAt:           time.Now(),
+		UpdatedAt:           time.Now(),
+	})
+
+	if err != nil {
+		http.Error(w, "Error creating user", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]interface{}{"user_id": user.ID, "message": "User created successfully"})
+}
+
+func (cfg *ApiConfig) getUserByUsernameHandler(w http.ResponseWriter, r *http.Request) {
+	username := r.URL.Query().Get("username")
+
+	if username == "" {
+		http.Error(w, "Username is required", http.StatusBadRequest)
+		return
+	}
+
+	user, err := cfg.dbQueries.GetUserByUsername(context.Background(), username)
+	if err != nil {
+		log.Printf("Error retrieving user: %v", err)
+		return
+	}
+
+	log.Printf("Retrieved user: %+v", user)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(user)
 }
