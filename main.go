@@ -2,24 +2,24 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"sync/atomic"
-	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/Pranay0205/VaultDrive/internal/database"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
-type apiConfig struct {
-	apiHits  atomic.Int32
-	db       *sql.DB
-	platform string
+type ApiConfig struct {
+	apiHits   atomic.Int32
+	dbQueries *database.Queries
 }
 
-func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
+func (cfg *ApiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s %s - User-Agent: %s", r.Method, r.URL.String(), r.UserAgent())
 		cfg.apiHits.Add(1)
@@ -28,33 +28,46 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 }
 
 func main() {
-	const filepathRoot = "."
-
-	const port = "8080"
 
 	godotenv.Load()
 
 	dbURL := os.Getenv("DB_URL")
 
-	_, err := sql.Open("postgres", dbURL)
+	fmt.Printf("Database URL: %s...\n", dbURL[:12])
 
-	if err != nil {
-		log.Printf("Failed to establish connection with db")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
 
-	fmt.Println("Database connection established!")
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		fmt.Printf("Error connecting to the database: %v\n", err)
+		return
+	}
+	defer db.Close()
 
-	router := gin.Default()
-	router.GET("/healthz", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status": "healthy",
-		})
-	})
+	apiConfig := ApiConfig{apiHits: atomic.Int32{}, dbQueries: database.New(db)}
 
-	fmt.Println("Server starting...")
-	fmt.Println("Time:", time.Now().Format("2006-01-02 15:04:05"))
-	fmt.Println("Tip: Press Ctrl+C to stop")
-	fmt.Printf("API Available At Link: http://localhost:%s\n", port)
-	router.Run()
+	fmt.Println("Connected to the database successfully.")
 
+	mux := http.NewServeMux()
+	mux.Handle("/healthz", apiConfig.middlewareMetricsInc(http.HandlerFunc(healthCheckHandler)))
+
+	fmt.Printf("Starting server on port %s...\n", port)
+	err = http.ListenAndServe(":"+port, mux)
+	if err != nil {
+		log.Fatalf("Error starting server: %v\n", err)
+	}
+
+}
+
+func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	response := map[string]string{
+		"status": "ok",
+	}
+	json.NewEncoder(w).Encode(response)
 }
