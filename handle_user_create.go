@@ -55,23 +55,3 @@ func (cfg *ApiConfig) registerUserHandler(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(map[string]interface{}{"user_id": user.ID, "message": "User created successfully"})
 }
 
-func (cfg *ApiConfig) getUserByUsernameHandler(w http.ResponseWriter, r *http.Request) {
-	username := r.URL.Query().Get("username")
-
-	if username == "" {
-		http.Error(w, "Username is required", http.StatusBadRequest)
-		return
-	}
-
-	user, err := cfg.dbQueries.GetUserByUsername(context.Background(), username)
-	if err != nil {
-		log.Printf("Error retrieving user: %v", err)
-		return
-	}
-
-	log.Printf("Retrieved user: %+v", user)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
-}

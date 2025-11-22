@@ -58,6 +58,7 @@ func main() {
 
 	mux.Handle("GET /user-by-username", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.getUserByUsernameHandler)))
 
+	mux.Handle("GET /user-by-email", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.getUserByEmailHandler)))
 	fmt.Printf("Starting server on port %s...\n", port)
 	err = http.ListenAndServe(":"+port, mux)
 	if err != nil {
