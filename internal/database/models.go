@@ -5,10 +5,23 @@
 package database
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+type File struct {
+	ID                uuid.UUID
+	OwnerID           uuid.NullUUID
+	Filename          string
+	FilePath          string
+	FileSize          int64
+	EncryptedMetadata sql.NullString
+	CurrentKeyVersion sql.NullInt32
+	CreatedAt         sql.NullTime
+	UpdatedAt         sql.NullTime
+}
 
 type User struct {
 	ID                  uuid.UUID
