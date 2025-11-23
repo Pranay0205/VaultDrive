@@ -50,7 +50,5 @@ func (cfg *ApiConfig) registerUserHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]interface{}{"user_id": user.ID, "message": "User created successfully"})
+	respondWithJSON(w, http.StatusCreated, user)
 }
