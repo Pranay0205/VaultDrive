@@ -100,3 +100,16 @@ func MakeRefreshToken() (string, error) {
 	}
 	return hex.EncodeToString(token), nil
 }
+func CheckPasswordHash(hash string, password string) error {
+	if password == "" {
+		return errors.New("password cannot be empty")
+	}
+
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+
+	if err != nil {
+		return fmt.Errorf("failed to verify password: %w", err)
+	}
+
+	return nil
+}

@@ -5,6 +5,7 @@
 package database
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,6 +17,16 @@ type RefreshToken struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	RevokedAt *time.Time `json:"revoked_at"`
 	
+type File struct {
+	ID                uuid.UUID
+	OwnerID           uuid.NullUUID
+	Filename          string
+	FilePath          string
+	FileSize          int64
+	EncryptedMetadata sql.NullString
+	CurrentKeyVersion sql.NullInt32
+	CreatedAt         sql.NullTime
+	UpdatedAt         sql.NullTime
 }
 
 type User struct {

@@ -54,4 +54,3 @@ func (cfg *ApiConfig) registerUserHandler(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]interface{}{"user_id": user.ID, "message": "User created successfully"})
 }
-

@@ -57,9 +57,12 @@ func main() {
 
 	mux.Handle("POST /register", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.registerUserHandler)))
 
+	mux.Handle("/login", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.handleLogin)))
+
 	mux.Handle("GET /user-by-username", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.getUserByUsernameHandler)))
 
 	mux.Handle("GET /user-by-email", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.getUserByEmailHandler)))
+
 	fmt.Printf("Starting server on port %s...\n", port)
 	err = http.ListenAndServe(":"+port, mux)
 	if err != nil {
