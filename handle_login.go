@@ -16,7 +16,8 @@ func (cfg *ApiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type response struct {
-		database.User
+		Username     string `json:"username"`
+		Email        string `json:"email"`
 		Token        string `json:"token"`
 		RefreshToken string `json:"refresh_token"`
 	}
@@ -65,7 +66,8 @@ func (cfg *ApiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, response{
-		User:         user,
+		Username:     user.Username,
+		Email:        user.Email,
 		Token:        accessToken,
 		RefreshToken: refreshToken,
 	})
