@@ -13,10 +13,11 @@ import (
 
 type RefreshToken struct {
 	CreateRefreshTokenParams
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	RevokedAt *time.Time `json:"revoked_at"`
-	
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	RevokedAt *time.Time
+}
+
 type File struct {
 	ID                uuid.UUID
 	OwnerID           uuid.NullUUID
@@ -41,6 +42,3 @@ type User struct {
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
 }
-
-
-
