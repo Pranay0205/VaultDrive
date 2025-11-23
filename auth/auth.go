@@ -97,7 +97,7 @@ func MakeRefreshToken() (string, error) {
 	return hex.EncodeToString(token), nil
 }
 
-func CheckPasswordHash(hash string, password string) error {
+func CheckPasswordHash(password, hash string) error {
 	if password == "" {
 		return errors.New("password cannot be empty")
 	}
