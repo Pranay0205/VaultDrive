@@ -33,11 +33,7 @@ func HashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
-func MakeJWT(
-	userID uuid.UUID,
-	tokenSecret string,
-	expiresIn time.Duration,
-) (string, error) {
+func MakeJWT(userID uuid.UUID, tokenSecret string, expiresIn time.Duration) (string, error) {
 	signingKey := []byte(tokenSecret)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
 		Issuer:    string(TokenTypeAccess),
@@ -100,6 +96,7 @@ func MakeRefreshToken() (string, error) {
 	}
 	return hex.EncodeToString(token), nil
 }
+
 func CheckPasswordHash(hash string, password string) error {
 	if password == "" {
 		return errors.New("password cannot be empty")
