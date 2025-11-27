@@ -63,7 +63,11 @@ func main() {
 
 	mux.Handle("GET /user-by-email", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.getUserByEmailHandler)))
 
-	mux.Handle("POST /files", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.handlerCreateFiles)))
+	mux.Handle("POST /files/upload", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.handlerCreateFiles)))
+
+	mux.Handle("GET /files/download", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.handlerDownloadFile)))
+
+	mux.Handle("GET /files", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.handlerListFiles)))
 
 	fmt.Printf("Starting server on port %s...\n", port)
 	err = http.ListenAndServe(":"+port, mux)

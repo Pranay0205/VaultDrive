@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"io"
 	"net/http"
 	"os"
@@ -69,12 +70,26 @@ func (cfg *ApiConfig) handlerCreateFiles(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// Extract encryption metadata
+	metadata := map[string]string{
+		"iv":        r.FormValue("iv"),
+		"salt":      r.FormValue("salt"),
+		"algorithm": r.FormValue("algorithm"),
+	}
+
+	metadataJSON, err := json.Marshal(metadata)
+	if err != nil {
+		os.Remove(filePath)
+		respondWithError(w, http.StatusInternalServerError, "Error processing metadata", err)
+		return
+	}
+
 	dbfile, err := cfg.dbQueries.CreateFile(r.Context(), database.CreateFileParams{
 		OwnerID:           uuid.NullUUID{UUID: ownerID, Valid: true},
 		Filename:          handler.Filename,
 		FilePath:          filePath,
 		FileSize:          handler.Size,
-		EncryptedMetadata: sql.NullString{},
+		EncryptedMetadata: sql.NullString{String: string(metadataJSON), Valid: true},
 		CurrentKeyVersion: sql.NullInt32{Int32: 1, Valid: true},
 		CreatedAt:         time.Now().UTC(),
 		UpdatedAt:         time.Now().UTC(),
@@ -94,6 +109,7 @@ func (cfg *ApiConfig) handlerCreateFiles(w http.ResponseWriter, r *http.Request)
 		"owner_id":   dbfile.OwnerID,
 		"created_at": dbfile.CreatedAt,
 		"updated_at": dbfile.UpdatedAt,
+		"metadata":   dbfile.EncryptedMetadata.String,
 	})
 
 }
