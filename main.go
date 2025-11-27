@@ -28,6 +28,21 @@ func (cfg *ApiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 	})
 }
 
+func middlewareCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 
 	godotenv.Load()
@@ -70,7 +85,7 @@ func main() {
 	mux.Handle("GET /files", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.handlerListFiles)))
 
 	fmt.Printf("Starting server on port %s...\n", port)
-	err = http.ListenAndServe(":"+port, mux)
+	err = http.ListenAndServe(":"+port, middlewareCORS(mux))
 	if err != nil {
 		log.Fatalf("Error starting server: %v\n", err)
 	}
