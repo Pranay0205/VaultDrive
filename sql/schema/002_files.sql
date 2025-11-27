@@ -7,8 +7,8 @@ CREATE TABLE files (
     file_size BIGINT NOT NULL,
     encrypted_metadata TEXT,  
     current_key_version INTEGER DEFAULT 1, 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
 );
 
 -- +goose Down

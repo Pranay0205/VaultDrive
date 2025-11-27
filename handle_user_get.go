@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"net/http"
 )
+
 func (cfg *ApiConfig) getUserByUsernameHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.URL.Query().Get("username")
 
@@ -22,13 +22,11 @@ func (cfg *ApiConfig) getUserByUsernameHandler(w http.ResponseWriter, r *http.Re
 
 	log.Printf("Retrieved user: %+v", user)
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	respondWithJSON(w, http.StatusAccepted, user)
 }
 
 func (cfg *ApiConfig) getUserByEmailHandler(w http.ResponseWriter, r *http.Request) {
-	email:=r.URL.Query().Get("email")
+	email := r.URL.Query().Get("email")
 
 	if email == "" {
 		http.Error(w, "Username is required", http.StatusBadRequest)
@@ -40,7 +38,5 @@ func (cfg *ApiConfig) getUserByEmailHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	respondWithJSON(w, http.StatusAccepted, user)
 }

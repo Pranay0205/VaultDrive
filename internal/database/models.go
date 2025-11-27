@@ -11,13 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type RefreshToken struct {
-	CreateRefreshTokenParams
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	RevokedAt *time.Time
-}
-
 type File struct {
 	ID                uuid.UUID
 	OwnerID           uuid.NullUUID
@@ -28,6 +21,15 @@ type File struct {
 	CurrentKeyVersion sql.NullInt32
 	CreatedAt         sql.NullTime
 	UpdatedAt         sql.NullTime
+}
+
+type RefreshToken struct {
+	Token     string
+	CreatedAt sql.NullTime
+	UpdatedAt sql.NullTime
+	RevokedAt sql.NullTime
+	UserID    uuid.UUID
+	ExpiresAt time.Time
 }
 
 type User struct {
