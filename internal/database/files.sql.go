@@ -8,6 +8,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -46,8 +47,8 @@ type CreateFileParams struct {
 	FileSize          int64
 	EncryptedMetadata sql.NullString
 	CurrentKeyVersion sql.NullInt32
-	CreatedAt         sql.NullTime
-	UpdatedAt         sql.NullTime
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 }
 
 func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (File, error) {
@@ -223,7 +224,7 @@ type UpdateFileParams struct {
 	FileSize          int64
 	EncryptedMetadata sql.NullString
 	CurrentKeyVersion sql.NullInt32
-	UpdatedAt         sql.NullTime
+	UpdatedAt         time.Time
 }
 
 func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) (File, error) {
@@ -265,7 +266,7 @@ type UpdateFileMetadataParams struct {
 	ID                uuid.UUID
 	EncryptedMetadata sql.NullString
 	CurrentKeyVersion sql.NullInt32
-	UpdatedAt         sql.NullTime
+	UpdatedAt         time.Time
 }
 
 func (q *Queries) UpdateFileMetadata(ctx context.Context, arg UpdateFileMetadataParams) (File, error) {

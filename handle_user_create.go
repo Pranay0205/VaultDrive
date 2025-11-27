@@ -46,6 +46,7 @@ func (cfg *ApiConfig) registerUserHandler(w http.ResponseWriter, r *http.Request
 	})
 
 	if err != nil {
+		log.Printf("Error creating user in DB: %v", err)
 		http.Error(w, "Error creating user", http.StatusInternalServerError)
 		return
 	}

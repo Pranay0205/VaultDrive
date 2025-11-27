@@ -19,8 +19,8 @@ type File struct {
 	FileSize          int64
 	EncryptedMetadata sql.NullString
 	CurrentKeyVersion sql.NullInt32
-	CreatedAt         sql.NullTime
-	UpdatedAt         sql.NullTime
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 }
 
 type RefreshToken struct {

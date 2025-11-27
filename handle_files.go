@@ -2,8 +2,10 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/Pranay0205/VaultDrive/auth"
@@ -25,35 +27,67 @@ func (cfg *ApiConfig) handlerCreateFiles(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	type uploadFileRequest struct {
-		FileName string `json:"file_name"`
-		FilePath string `json:"file_path"`
-		Size     int64  `json:"size"`
-	}
-
-	var fileRequest uploadFileRequest
-	err = json.NewDecoder(r.Body).Decode(&fileRequest)
+	// Parse multipart form (max 10 MB)
+	err = r.ParseMultipartForm(10 << 20)
 	if err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		respondWithError(w, http.StatusBadRequest, "Could not parse multipart form", err)
 		return
 	}
+
+	file, handler, err := r.FormFile("file")
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Error retrieving the file", err)
+		return
+	}
+	defer file.Close()
+
+	// Create uploads directory if it doesn't exist
+	uploadDir := "uploads"
+	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
+		err = os.Mkdir(uploadDir, 0755)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Could not create uploads directory", err)
+			return
+		}
+	}
+
+	// Generate a unique filename to prevent overwriting
+	filename := uuid.New().String() + filepath.Ext(handler.Filename)
+	filePath := filepath.Join(uploadDir, filename)
+
+	// Create the file on the server
+	dst, err := os.Create(filePath)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not create file on server", err)
+		return
+	}
+	defer dst.Close()
+
+	// Copy the uploaded file to the destination file
+	if _, err := io.Copy(dst, file); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not save file", err)
+		return
+	}
+
 	dbfile, err := cfg.dbQueries.CreateFile(r.Context(), database.CreateFileParams{
 		OwnerID:           uuid.NullUUID{UUID: ownerID, Valid: true},
-		Filename:          fileRequest.FileName,
-		FilePath:          fileRequest.FilePath,
-		FileSize:          fileRequest.Size,
+		Filename:          handler.Filename,
+		FilePath:          filePath,
+		FileSize:          handler.Size,
 		EncryptedMetadata: sql.NullString{},
-		CurrentKeyVersion: sql.NullInt32{},
-		CreatedAt:         sql.NullTime{Time: time.Now().UTC(), Valid: true},
-		UpdatedAt:         sql.NullTime{Time: time.Now().UTC(), Valid: true},
+		CurrentKeyVersion: sql.NullInt32{Int32: 1, Valid: true},
+		CreatedAt:         time.Now().UTC(),
+		UpdatedAt:         time.Now().UTC(),
 	})
 
 	if err != nil {
+		// If DB insert fails, we should probably delete the uploaded file
+		os.Remove(filePath)
 		respondWithError(w, http.StatusInternalServerError, "Could not create file entry", err)
 		return
 	}
 
-	respondWithJSON(w, http.StatusAccepted, map[string]interface{}{
+	respondWithJSON(w, http.StatusCreated, map[string]interface{}{
 		"file_name":  dbfile.Filename,
 		"file_path":  dbfile.FilePath,
 		"file_id":    dbfile.ID,
