@@ -24,7 +24,7 @@ func (cfg *ApiConfig) handlerDownloadFile(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	fileIDStr := r.URL.Query().Get("id")
+	fileIDStr := r.PathValue("id")
 	if fileIDStr == "" {
 		respondWithError(w, http.StatusBadRequest, "File ID is required", nil)
 		return
