@@ -23,6 +23,14 @@ type File struct {
 	UpdatedAt         time.Time
 }
 
+type FileShare struct {
+	ID               uuid.UUID
+	FileID           uuid.NullUUID
+	SharedWithUserID uuid.NullUUID
+	WrappedKey       string
+	CreatedAt        time.Time
+}
+
 type RefreshToken struct {
 	Token     string
 	CreatedAt sql.NullTime
