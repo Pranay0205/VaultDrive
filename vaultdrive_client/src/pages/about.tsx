@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Shield, Users, Target, Github } from "lucide-react";
 import { Button } from "../components/ui/button";
+import VaultIcon from "../components/ui/vault-icon";
 
 export default function About() {
   return (
@@ -9,7 +10,7 @@ export default function About() {
         {/* Header */}
         <div className="text-center mb-16">
           <div className="flex items-center justify-center mb-4">
-            <img src="/icons/vault.png" alt="Vault icon by juicy_fish from Flaticon" className="w-16 h-16" />
+            <VaultIcon className="w-20 h-20 drop-shadow-xl" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">About VaultDrive</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">

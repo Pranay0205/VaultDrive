@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { ThemeToggle } from "./theme-toggle";
+import VaultIcon from "./ui/vault-icon";
 
 interface NavbarProps {
   children: React.ReactNode;
@@ -62,8 +63,8 @@ export default function Navbar({ children }: NavbarProps) {
       <nav className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2">
-              <img src="/icons/vault.png" alt="Vault icon by juicy_fish from Flaticon" className="w-8 h-8" />
+            <div className="flex items-center gap-4">
+              <VaultIcon className="w-10 h-10 m-1" />
               <h1 className="text-2xl font-bold text-primary">VaultDrive</h1>
             </div>
             <ul className="flex gap-6">

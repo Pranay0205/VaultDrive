@@ -1,6 +1,7 @@
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Shield, Lock, Database, Github, FileUp, Key } from "lucide-react";
+import VaultIcon from "../components/ui/vault-icon";
 
 export default function Home() {
   return (
@@ -8,8 +9,8 @@ export default function Home() {
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-4xl mx-auto text-center space-y-6">
-          <div className="flex items-center justify-center mb-4">
-            <img src="/icons/vault.png" alt="Vault icon by juicy_fish from Flaticon" className="w-20 h-20" />
+          <div className="flex items-center justify-center mb-6">
+            <VaultIcon className="w-24 h-24 drop-shadow-2xl" />
           </div>
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight">VaultDrive</h1>
 

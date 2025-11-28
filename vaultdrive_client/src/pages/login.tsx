@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Lock, Mail, User, Eye, EyeOff } from "lucide-react";
+import VaultIcon from "../components/ui/vault-icon";
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -96,7 +97,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <img src="/icons/vault.png" alt="Vault icon by juicy_fish from Flaticon" className="w-12 h-12" />
+            <VaultIcon className="w-14 h-14 drop-shadow-lg" />
             <h1 className="text-3xl font-bold">VaultDrive</h1>
           </div>
           <p className="text-muted-foreground">Secure File Storage System</p>
