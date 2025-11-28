@@ -330,7 +330,11 @@ export default function Files() {
                   onChange={handleFileSelect}
                   className="flex-1 text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 file:cursor-pointer"
                 />
-                <Button onClick={handleUpload} disabled={!selectedFile || uploading} className="gap-2">
+                <Button
+                  onClick={handleUpload}
+                  disabled={!selectedFile || uploading}
+                  className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+                >
                   <Upload className="w-4 h-4" />
                   {uploading ? "Uploading..." : "Upload"}
                 </Button>
@@ -400,7 +404,12 @@ export default function Files() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button size="sm" variant="ghost" onClick={() => toggleMetadata(file.id)} className="gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => toggleMetadata(file.id)}
+                            className="gap-1 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+                          >
                             {isExpanded ? (
                               <>
                                 <ChevronUp className="w-4 h-4" />
@@ -417,7 +426,7 @@ export default function Files() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleDownload(file.id, file.filename, file.metadata)}
-                            className="gap-2"
+                            className="gap-2 border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 dark:text-blue-400"
                           >
                             <Download className="w-4 h-4" />
                             Download
@@ -426,7 +435,7 @@ export default function Files() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleDeleteClick(file.id, file.filename)}
-                            className="gap-2 text-destructive hover:text-destructive"
+                            className="gap-2 border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 dark:text-red-400"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -544,7 +553,11 @@ export default function Files() {
                   >
                     Cancel
                   </Button>
-                  <Button onClick={handlePasswordSubmit} disabled={!encryptionPassword} className="flex-1">
+                  <Button
+                    onClick={handlePasswordSubmit}
+                    disabled={!encryptionPassword}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
                     {passwordAction === "upload" ? "Encrypt & Upload" : "Decrypt & Download"}
                   </Button>
                 </div>
