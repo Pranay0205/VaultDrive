@@ -84,6 +84,8 @@ func main() {
 
 	mux.Handle("GET /files", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.handlerListFiles)))
 
+	mux.Handle("DELETE /files/{id}", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.handlerDeleteFile)))
+
 	fmt.Printf("Starting server on port %s...\n", port)
 	err = http.ListenAndServe(":"+port, middlewareCORS(mux))
 	if err != nil {
