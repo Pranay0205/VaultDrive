@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Upload, Download, File, Trash2, AlertCircle, Lock, Key } from "lucide-react";
+import { Upload, Download, File, Trash2, AlertCircle, Lock, Key, ChevronDown, ChevronUp, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   generateSalt,
@@ -35,6 +35,9 @@ export default function Files() {
   const [pendingDownload, setPendingDownload] = useState<{ fileId: string; filename: string; metadata: string } | null>(
     null
   );
+
+  // Metadata visibility
+  const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     // Check if user is logged in
@@ -233,6 +236,31 @@ export default function Files() {
     return new Date(dateString).toLocaleString();
   };
 
+  const toggleMetadata = (fileId: string) => {
+    setExpandedFiles((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(fileId)) {
+        newSet.delete(fileId);
+      } else {
+        newSet.add(fileId);
+      }
+      return newSet;
+    });
+  };
+
+  const maskKey = (key: string): string => {
+    if (!key || key.length <= 5) return key;
+    return key.substring(0, 5) + "*".repeat(Math.min(key.length - 5, 20));
+  };
+
+  const parseMetadata = (metadataStr: string) => {
+    try {
+      return JSON.parse(metadataStr);
+    } catch {
+      return null;
+    }
+  };
+
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4 max-w-6xl">
@@ -297,35 +325,118 @@ export default function Files() {
               </div>
             ) : (
               <div className="space-y-2">
-                {files.map((file) => (
-                  <div
-                    key={file.id}
-                    className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <File className="w-5 h-5 text-muted-foreground shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{file.filename}</p>
-                        <div className="flex gap-3 text-sm text-muted-foreground">
-                          <span>{formatFileSize(file.file_size)}</span>
-                          <span>•</span>
-                          <span>{formatDate(file.created_at)}</span>
+                {files.map((file) => {
+                  const isExpanded = expandedFiles.has(file.id);
+                  const metadata = parseMetadata(file.metadata);
+
+                  return (
+                    <div key={file.id} className="rounded-lg border bg-card overflow-hidden">
+                      {/* Main File Row */}
+                      <div className="flex items-center justify-between p-4 hover:bg-accent/50 transition-colors">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <File className="w-5 h-5 text-muted-foreground shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{file.filename}</p>
+                            <div className="flex gap-3 text-sm text-muted-foreground">
+                              <span>{formatFileSize(file.file_size)}</span>
+                              <span>•</span>
+                              <span>{formatDate(file.created_at)}</span>
+                              {metadata && (
+                                <>
+                                  <span>•</span>
+                                  <span className="flex items-center gap-1">
+                                    <Shield className="w-3 h-3" />
+                                    {metadata.algorithm || "Encrypted"}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" variant="ghost" onClick={() => toggleMetadata(file.id)} className="gap-1">
+                            {isExpanded ? (
+                              <>
+                                <ChevronUp className="w-4 h-4" />
+                                Hide Details
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="w-4 h-4" />
+                                Show Details
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownload(file.id, file.filename, file.metadata)}
+                            className="gap-2"
+                          >
+                            <Download className="w-4 h-4" />
+                            Download
+                          </Button>
                         </div>
                       </div>
+
+                      {/* Collapsible Metadata Section */}
+                      {isExpanded && metadata && (
+                        <div className="border-t bg-muted/30 p-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2 text-sm font-medium">
+                              <Lock className="w-4 h-4" />
+                              <span>Encryption Details</span>
+                            </div>
+
+                            <div className="grid gap-3 text-sm">
+                              {/* Algorithm */}
+                              <div className="flex justify-between items-start">
+                                <span className="text-muted-foreground">Algorithm:</span>
+                                <span className="font-mono font-medium">{metadata.algorithm || "N/A"}</span>
+                              </div>
+
+                              {/* Salt */}
+                              {metadata.salt && (
+                                <div className="flex justify-between items-start">
+                                  <span className="text-muted-foreground">Salt (Key Derivation):</span>
+                                  <span className="font-mono text-xs break-all max-w-[200px] text-right">
+                                    {maskKey(metadata.salt)}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* IV */}
+                              {metadata.iv && (
+                                <div className="flex justify-between items-start">
+                                  <span className="text-muted-foreground">IV (Initialization Vector):</span>
+                                  <span className="font-mono text-xs break-all max-w-[200px] text-right">
+                                    {maskKey(metadata.iv)}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* File ID */}
+                              <div className="flex justify-between items-start">
+                                <span className="text-muted-foreground">File ID:</span>
+                                <span className="font-mono text-xs break-all max-w-[200px] text-right">{file.id}</span>
+                              </div>
+                            </div>
+
+                            <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
+                              <p className="text-xs text-blue-600 dark:text-blue-400 flex items-start gap-2">
+                                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                <span>
+                                  This file is encrypted with AES-256-GCM. You need your password to decrypt and
+                                  download it.
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDownload(file.id, file.filename, file.metadata)}
-                        className="gap-2"
-                      >
-                        <Download className="w-4 h-4" />
-                        Download
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>
