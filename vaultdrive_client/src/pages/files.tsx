@@ -39,6 +39,11 @@ export default function Files() {
   // Metadata visibility
   const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set());
 
+  // Delete confirmation
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<{ id: string; filename: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
     // Check if user is logged in
     const token = localStorage.getItem("token");
@@ -261,6 +266,47 @@ export default function Files() {
     }
   };
 
+  const handleDeleteClick = (fileId: string, filename: string) => {
+    setFileToDelete({ id: fileId, filename });
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!fileToDelete) return;
+
+    setDeleting(true);
+    setError("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:8080/files/${fileToDelete.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          navigate("/login");
+          return;
+        }
+        throw new Error("Failed to delete file");
+      }
+
+      // Remove from UI
+      setFiles((prev) => prev.filter((f) => f.id !== fileToDelete.id));
+
+      // Close modal
+      setShowDeleteModal(false);
+      setFileToDelete(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete file");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4 max-w-6xl">
@@ -375,6 +421,14 @@ export default function Files() {
                           >
                             <Download className="w-4 h-4" />
                             Download
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteClick(file.id, file.filename)}
+                            className="gap-2 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
@@ -492,6 +546,55 @@ export default function Files() {
                   </Button>
                   <Button onClick={handlePasswordSubmit} disabled={!encryptionPassword} className="flex-1">
                     {passwordAction === "upload" ? "Encrypt & Upload" : "Decrypt & Download"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && fileToDelete && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="w-full max-w-md mx-4">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                  <Trash2 className="w-5 h-5" />
+                  Delete File
+                </CardTitle>
+                <CardDescription>
+                  Are you sure you want to delete this file? This action cannot be undone.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-3 bg-muted rounded-md">
+                  <p className="text-sm font-medium truncate">{fileToDelete.filename}</p>
+                </div>
+
+                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                  <p className="text-xs text-destructive flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>
+                      The encrypted file will be permanently deleted from the server. You will not be able to recover
+                      it.
+                    </span>
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setFileToDelete(null);
+                    }}
+                    disabled={deleting}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button variant="destructive" onClick={handleDeleteConfirm} disabled={deleting} className="flex-1">
+                    {deleting ? "Deleting..." : "Delete File"}
                   </Button>
                 </div>
               </CardContent>
