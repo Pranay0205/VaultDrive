@@ -77,6 +77,13 @@ func (cfg *ApiConfig) handlerCreateFiles(w http.ResponseWriter, r *http.Request)
 		"algorithm": r.FormValue("algorithm"),
 	}
 
+	wrappedKey := r.FormValue("wrapped_key")
+	if wrappedKey == "" {
+		os.Remove(filePath)
+		respondWithError(w, http.StatusBadRequest, "wrapped_key is required", nil)
+		return
+	}
+
 	metadataJSON, err := json.Marshal(metadata)
 	if err != nil {
 		os.Remove(filePath)
@@ -99,6 +106,21 @@ func (cfg *ApiConfig) handlerCreateFiles(w http.ResponseWriter, r *http.Request)
 		// If DB insert fails, we should probably delete the uploaded file
 		os.Remove(filePath)
 		respondWithError(w, http.StatusInternalServerError, "Could not create file entry", err)
+		return
+	}
+
+	// Save the wrapped key for the owner
+	_, err = cfg.dbQueries.CreateFileAccessKey(r.Context(), database.CreateFileAccessKeyParams{
+		FileID:     uuid.NullUUID{UUID: dbfile.ID, Valid: true},
+		UserID:     uuid.NullUUID{UUID: ownerID, Valid: true},
+		WrappedKey: wrappedKey,
+	})
+
+	if err != nil {
+		// Rollback: delete file and DB entry
+		os.Remove(filePath)
+		cfg.dbQueries.DeleteFile(r.Context(), dbfile.ID)
+		respondWithError(w, http.StatusInternalServerError, "Could not save file access key", err)
 		return
 	}
 

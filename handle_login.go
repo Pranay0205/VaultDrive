@@ -16,10 +16,12 @@ func (cfg *ApiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type response struct {
-		Username     string `json:"username"`
-		Email        string `json:"email"`
-		Token        string `json:"token"`
-		RefreshToken string `json:"refresh_token"`
+		Username            string `json:"username"`
+		Email               string `json:"email"`
+		Token               string `json:"token"`
+		RefreshToken        string `json:"refresh_token"`
+		PublicKey           string `json:"public_key"`
+		PrivateKeyEncrypted string `json:"private_key_encrypted"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -66,9 +68,11 @@ func (cfg *ApiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, response{
-		Username:     user.Username,
-		Email:        user.Email,
-		Token:        accessToken,
-		RefreshToken: refreshToken,
+		Username:            user.Username,
+		Email:               user.Email,
+		Token:               accessToken,
+		RefreshToken:        refreshToken,
+		PublicKey:           user.PublicKey,
+		PrivateKeyEncrypted: user.PrivateKeyEncrypted,
 	})
 }

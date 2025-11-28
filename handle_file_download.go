@@ -8,6 +8,7 @@ import (
 	"io"
 
 	"github.com/Pranay0205/VaultDrive/auth"
+	"github.com/Pranay0205/VaultDrive/internal/database"
 	"github.com/google/uuid"
 )
 
@@ -46,8 +47,29 @@ func (cfg *ApiConfig) handlerDownloadFile(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Check ownership
-	if !dbFile.OwnerID.Valid || dbFile.OwnerID.UUID != userID {
+	// Check access via file_access_keys
+	accessKey, err := cfg.dbQueries.GetFileAccessKey(r.Context(), database.GetFileAccessKeyParams{
+		FileID: uuid.NullUUID{UUID: fileID, Valid: true},
+		UserID: uuid.NullUUID{UUID: userID, Valid: true},
+	})
+
+	hasAccess := false
+	wrappedKey := ""
+
+	if err == nil {
+		hasAccess = true
+		wrappedKey = accessKey.WrappedKey
+	} else if err == sql.ErrNoRows {
+		// Fallback: Check if owner (for legacy files or if key is missing)
+		if dbFile.OwnerID.Valid && dbFile.OwnerID.UUID == userID {
+			hasAccess = true
+		}
+	} else {
+		respondWithError(w, http.StatusInternalServerError, "Error checking file access", err)
+		return
+	}
+
+	if !hasAccess {
 		respondWithError(w, http.StatusForbidden, "You do not have access to this file", nil)
 		return
 	}
@@ -70,10 +92,15 @@ func (cfg *ApiConfig) handlerDownloadFile(w http.ResponseWriter, r *http.Request
 	// Set headers
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+dbFile.Filename+"\"")
 	w.Header().Set("Content-Type", "application/octet-stream")
-	
+
 	// Return metadata in a custom header so the client can decrypt
 	if dbFile.EncryptedMetadata.Valid {
 		w.Header().Set("X-File-Metadata", dbFile.EncryptedMetadata.String)
+	}
+
+	// Return wrapped key if available
+	if wrappedKey != "" {
+		w.Header().Set("X-Wrapped-Key", wrappedKey)
 	}
 
 	// Stream the file content

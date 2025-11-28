@@ -78,9 +78,15 @@ func main() {
 
 	mux.Handle("GET /user-by-email", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.getUserByEmailHandler)))
 
+	mux.Handle("GET /user/public-key", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.handlerGetPublicKey)))
+
 	mux.Handle("POST /files/upload", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.handlerCreateFiles)))
 
 	mux.Handle("GET /files/{id}/download", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.handlerDownloadFile)))
+
+	mux.Handle("POST /files/{id}/share", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.handlerShareFile)))
+
+	mux.Handle("DELETE /files/{id}/revoke/{user_id}", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.handlerRevokeFileAccess)))
 
 	mux.Handle("GET /files", apiConfig.middlewareMetricsInc(http.HandlerFunc(apiConfig.handlerListFiles)))
 
