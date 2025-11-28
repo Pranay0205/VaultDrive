@@ -8,6 +8,9 @@ export default function Home() {
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-4xl mx-auto text-center space-y-6">
+          <div className="flex items-center justify-center mb-4">
+            <img src="/icons/vault.png" alt="Vault icon by juicy_fish from Flaticon" className="w-20 h-20" />
+          </div>
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight">VaultDrive</h1>
 
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -16,11 +19,20 @@ export default function Home() {
           </p>
 
           <div className="flex gap-3 justify-center pt-4">
-            <Button variant="default" className="gap-2">
+            <Button
+              variant="default"
+              className="gap-2 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white"
+              onClick={() => window.open("https://github.com/Pranay0205/VaultDrive", "_blank")}
+            >
               <Github className="w-4 h-4" />
               View on GitHub
             </Button>
-            <Button variant="outline">Try Demo</Button>
+            <Button
+              variant="outline"
+              className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 dark:text-blue-400"
+            >
+              Try Demo
+            </Button>
           </div>
         </div>
       </section>

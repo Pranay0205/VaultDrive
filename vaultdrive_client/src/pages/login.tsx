@@ -95,7 +95,10 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">VaultDrive</h1>
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <img src="/icons/vault.png" alt="Vault icon by juicy_fish from Flaticon" className="w-12 h-12" />
+            <h1 className="text-3xl font-bold">VaultDrive</h1>
+          </div>
           <p className="text-muted-foreground">Secure File Storage System</p>
         </div>
 
@@ -148,7 +151,7 @@ export default function Login() {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={loading}>
                   {loading ? "Logging in..." : "Login"}
                 </Button>
               </form>
@@ -231,7 +234,7 @@ export default function Login() {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white" disabled={loading}>
                   {loading ? "Creating Account..." : "Create Account"}
                 </Button>
               </form>

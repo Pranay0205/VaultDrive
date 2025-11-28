@@ -8,6 +8,9 @@ export default function About() {
       <div className="container mx-auto px-4 max-w-5xl">
         {/* Header */}
         <div className="text-center mb-16">
+          <div className="flex items-center justify-center mb-4">
+            <img src="/icons/vault.png" alt="Vault icon by juicy_fish from Flaticon" className="w-16 h-16" />
+          </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">About VaultDrive</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             A secure file storage solution built as a college project demonstrating modern web development practices
@@ -192,11 +195,18 @@ export default function About() {
 
         {/* Call to Action */}
         <div className="text-center mt-12">
-          <Button size="lg" className="gap-2">
+          <Button
+            size="lg"
+            className="gap-2 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white"
+            onClick={() => window.open("https://github.com/Pranay0205/VaultDrive", "_blank")}
+          >
             <Github className="w-5 h-5" />
             View Source Code
           </Button>
         </div>
+
+        {/* Attribution */}
+        <div className="text-center mt-12 text-xs text-muted-foreground"></div>
       </div>
     </div>
   );
