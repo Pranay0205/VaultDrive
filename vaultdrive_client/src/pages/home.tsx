@@ -1,9 +1,19 @@
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
-import { Shield, Lock, Database, Github, FileUp, Key, Share2 } from "lucide-react";
+import {
+  Shield,
+  Lock,
+  Database,
+  Github,
+  FileUp,
+  Key,
+  Share2,
+} from "lucide-react";
 import VaultIcon from "../components/ui/vault-icon";
+import { useNavigate } from "react-router-dom";
 
 export default function Home() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -12,18 +22,26 @@ export default function Home() {
           <div className="flex items-center justify-center mb-6">
             <VaultIcon className="w-24 h-24 drop-shadow-2xl" />
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight">VaultDrive</h1>
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
+            VaultDrive
+          </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-            A secure file storage system built with Go, React, and PostgreSQL. Demonstrates modern web architecture with
-            JWT authentication and encrypted file handling.
+            A secure file storage system built with Go, React, and PostgreSQL.
+            Demonstrates modern web architecture with JWT authentication and
+            encrypted file handling.
           </p>
 
           <div className="flex gap-3 justify-center pt-4">
             <Button
               variant="default"
               className="gap-2 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white"
-              onClick={() => window.open("https://github.com/Pranay0205/VaultDrive", "_blank")}
+              onClick={() =>
+                window.open(
+                  "https://github.com/Pranay0205/VaultDrive",
+                  "_blank"
+                )
+              }
             >
               <Github className="w-4 h-4" />
               View on GitHub
@@ -31,6 +49,7 @@ export default function Home() {
             <Button
               variant="outline"
               className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 dark:text-blue-400"
+              onClick={() => navigate("/files")}
             >
               Try Demo
             </Button>
@@ -41,7 +60,9 @@ export default function Home() {
       {/* Features Overview */}
       <section className="container mx-auto px-4 py-16">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-12">Core Features</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-12">
+            Core Features
+          </h2>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
@@ -51,7 +72,8 @@ export default function Home() {
                 </div>
                 <h3 className="font-semibold mb-2">Secure Authentication</h3>
                 <p className="text-sm text-muted-foreground">
-                  JWT-based auth with bcrypt password hashing and refresh token rotation
+                  JWT-based auth with bcrypt password hashing and refresh token
+                  rotation
                 </p>
               </CardContent>
             </Card>
@@ -63,7 +85,8 @@ export default function Home() {
                 </div>
                 <h3 className="font-semibold mb-2">File Management</h3>
                 <p className="text-sm text-muted-foreground">
-                  Upload, download, and manage files with complete CRUD operations
+                  Upload, download, and manage files with complete CRUD
+                  operations
                 </p>
               </CardContent>
             </Card>
@@ -75,7 +98,8 @@ export default function Home() {
                 </div>
                 <h3 className="font-semibold mb-2">Client-Side Encryption</h3>
                 <p className="text-sm text-muted-foreground">
-                  AES-256-GCM encryption with password-based key derivation (PBKDF2)
+                  AES-256-GCM encryption with password-based key derivation
+                  (PBKDF2)
                 </p>
               </CardContent>
             </Card>
@@ -87,7 +111,8 @@ export default function Home() {
                 </div>
                 <h3 className="font-semibold mb-2">Secure File Sharing</h3>
                 <p className="text-sm text-muted-foreground">
-                  Share encrypted files with other users using public key cryptography
+                  Share encrypted files with other users using public key
+                  cryptography
                 </p>
               </CardContent>
             </Card>
@@ -98,7 +123,9 @@ export default function Home() {
       {/* Tech Stack */}
       <section className="container mx-auto px-4 py-16">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-12">Technology Stack</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-12">
+            Technology Stack
+          </h2>
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Backend */}
@@ -154,16 +181,22 @@ export default function Home() {
               <h2 className="text-xl font-semibold mb-4">About This Project</h2>
               <div className="space-y-3 text-sm text-muted-foreground">
                 <p>
-                  VaultDrive is a full-stack web application developed as a college project to demonstrate modern
-                  software development practices and security implementations.
+                  VaultDrive is a full-stack web application developed as a
+                  college project to demonstrate modern software development
+                  practices and security implementations.
                 </p>
                 <p>
-                  The system implements user authentication, file upload/download functionality, and proper database
-                  management using industry-standard tools and frameworks.
+                  The system implements user authentication, file
+                  upload/download functionality, and proper database management
+                  using industry-standard tools and frameworks.
                 </p>
                 <p className="pt-2">
-                  <strong className="text-foreground">Key Learning Outcomes:</strong> RESTful API design, secure
-                  authentication flows, database schema design, React state management, and deployment practices.
+                  <strong className="text-foreground">
+                    Key Learning Outcomes:
+                  </strong>{" "}
+                  RESTful API design, secure authentication flows, database
+                  schema design, React state management, and deployment
+                  practices.
                 </p>
               </div>
             </CardContent>
