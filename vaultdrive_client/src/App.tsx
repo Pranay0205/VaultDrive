@@ -3,6 +3,7 @@ import Navbar from "./components/navbar";
 import Home from "./pages/home";
 import Login from "./pages/login";
 import Files from "./pages/files";
+import Shared from "./pages/shared";
 import About from "./pages/about";
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<Home />} />
             <Route path="/files" element={<Files />} />
+            <Route path="/shared" element={<Shared />} />
             <Route path="/about" element={<About />} />
           </Routes>
         </Navbar>

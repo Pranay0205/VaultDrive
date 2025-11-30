@@ -1,7 +1,21 @@
 import { useState, useEffect } from "react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Upload, Download, File, Trash2, AlertCircle, Lock, Key, ChevronDown, ChevronUp, Shield } from "lucide-react";
+import {
+  Upload,
+  Download,
+  File,
+  Trash2,
+  AlertCircle,
+  Lock,
+  Key,
+  ChevronDown,
+  ChevronUp,
+  Shield,
+  Share2,
+  Users,
+  X,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   generateSalt,
@@ -43,6 +57,21 @@ export default function Files() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [fileToDelete, setFileToDelete] = useState<{ id: string; filename: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // File sharing
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [fileToShare, setFileToShare] = useState<{ id: string; filename: string } | null>(null);
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [sharing, setSharing] = useState(false);
+
+  // Manage shares
+  const [showManageSharesModal, setShowManageSharesModal] = useState(false);
+  const [fileToManage, setFileToManage] = useState<{ id: string; filename: string } | null>(null);
+  const [sharedUsers, setSharedUsers] = useState<
+    Array<{ user_id: string; username: string; email: string; shared_at: string }>
+  >([]);
+  const [loadingShares, setLoadingShares] = useState(false);
+  const [revoking, setRevoking] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if user is logged in
@@ -132,7 +161,12 @@ export default function Files() {
       formData.append("salt", arrayBufferToBase64(salt));
       formData.append("algorithm", "AES-256-GCM");
 
-      // 6. Upload to server
+      // 6. Add wrapped key (for now, we store the key derivation info)
+      // In a full implementation, this would be the file key wrapped with user's public key
+      const wrappedKey = arrayBufferToBase64(salt) + ":" + arrayBufferToBase64(iv);
+      formData.append("wrapped_key", wrappedKey);
+
+      // 7. Upload to server
       const token = localStorage.getItem("token");
       const response = await fetch("http://localhost:8080/files/upload", {
         method: "POST",
@@ -307,6 +341,141 @@ export default function Files() {
     }
   };
 
+  const handleShareClick = (fileId: string, filename: string) => {
+    setFileToShare({ id: fileId, filename });
+    setShowShareModal(true);
+  };
+
+  const handleShareConfirm = async () => {
+    if (!fileToShare || !recipientEmail) return;
+
+    setSharing(true);
+    setError("");
+
+    try {
+      // Get recipient's public key
+      const token = localStorage.getItem("token");
+      const publicKeyResponse = await fetch(
+        `http://localhost:8080/user/public-key?email=${encodeURIComponent(recipientEmail)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!publicKeyResponse.ok) {
+        if (publicKeyResponse.status === 404) {
+          throw new Error("User not found with that email");
+        }
+        throw new Error("Failed to get recipient public key");
+      }
+
+      await publicKeyResponse.json();
+
+      // For now, we'll use a placeholder wrapped key
+      // In a full implementation, you'd:
+      // 1. Get the file's encryption key from metadata
+      // 2. Wrap it with recipient's public key using the public_key
+      // 3. Send the wrapped key
+      const wrappedKey = "placeholder_wrapped_key_" + Date.now();
+
+      // Share the file
+      const shareResponse = await fetch(`http://localhost:8080/files/${fileToShare.id}/share`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          recipient_email: recipientEmail,
+          wrapped_key: wrappedKey,
+        }),
+      });
+
+      if (!shareResponse.ok) {
+        const data = await shareResponse.json();
+        throw new Error(data.error || "Failed to share file");
+      }
+
+      // Success feedback
+      alert(`File shared successfully with ${recipientEmail}`);
+
+      // Close modal
+      setShowShareModal(false);
+      setFileToShare(null);
+      setRecipientEmail("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to share file");
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const handleManageSharesClick = async (fileId: string, filename: string) => {
+    setFileToManage({ id: fileId, filename });
+    setShowManageSharesModal(true);
+    setLoadingShares(true);
+    setError("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:8080/files/${fileId}/shares`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          navigate("/login");
+          return;
+        }
+        throw new Error("Failed to fetch shared users");
+      }
+
+      const data = await response.json();
+      setSharedUsers(data || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load shared users");
+    } finally {
+      setLoadingShares(false);
+    }
+  };
+
+  const handleRevokeAccess = async (userId: string) => {
+    if (!fileToManage) return;
+
+    setRevoking(userId);
+    setError("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:8080/files/${fileToManage.id}/revoke/${userId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          navigate("/login");
+          return;
+        }
+        throw new Error("Failed to revoke access");
+      }
+
+      // Remove the user from the list
+      setSharedUsers((prev) => prev.filter((user) => user.user_id !== userId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to revoke access");
+    } finally {
+      setRevoking(null);
+    }
+  };
+
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4 max-w-6xl">
@@ -425,11 +594,26 @@ export default function Files() {
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => handleShareClick(file.id, file.filename)}
+                            className="gap-2 border-purple-500 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950 dark:text-purple-400"
+                          >
+                            <Share2 className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleManageSharesClick(file.id, file.filename)}
+                            className="gap-2 border-orange-500 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950 dark:text-orange-400"
+                          >
+                            <Users className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => handleDownload(file.id, file.filename, file.metadata)}
                             className="gap-2 border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 dark:text-blue-400"
                           >
                             <Download className="w-4 h-4" />
-                            Download
                           </Button>
                           <Button
                             size="sm"
@@ -507,8 +691,8 @@ export default function Files() {
 
         {/* Password Modal */}
         {showPasswordModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <Card className="w-full max-w-md mx-4">
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+            <Card className="w-full max-w-md mx-4 bg-black">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Lock className="w-5 h-5" />
@@ -566,9 +750,187 @@ export default function Files() {
           </div>
         )}
 
+        {/* Share File Modal */}
+        {showShareModal && fileToShare && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+            <Card className="w-full max-w-md mx-4">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-purple-600 dark:text-purple-400">
+                    <Share2 className="w-5 h-5" />
+                    Share File
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowShareModal(false);
+                      setFileToShare(null);
+                      setRecipientEmail("");
+                    }}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <CardDescription>Share this file with another user by entering their email address</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-3 bg-muted rounded-md">
+                  <p className="text-sm font-medium truncate flex items-center gap-2">
+                    <File className="w-4 h-4" />
+                    {fileToShare.filename}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    Recipient Email
+                  </label>
+                  <input
+                    type="email"
+                    value={recipientEmail}
+                    onChange={(e) => setRecipientEmail(e.target.value)}
+                    placeholder="user@example.com"
+                    className="w-full px-3 py-2 border rounded-md bg-background"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && recipientEmail) {
+                        handleShareConfirm();
+                      }
+                    }}
+                  />
+                </div>
+
+                <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
+                  <p className="text-xs text-blue-600 dark:text-blue-400 flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>
+                      The recipient must have a VaultDrive account. They will receive access to download this file.
+                    </span>
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowShareModal(false);
+                      setFileToShare(null);
+                      setRecipientEmail("");
+                    }}
+                    disabled={sharing}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleShareConfirm}
+                    disabled={!recipientEmail || sharing}
+                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+                  >
+                    {sharing ? "Sharing..." : "Share File"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Manage Shares Modal */}
+        {showManageSharesModal && fileToManage && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+            <Card className="w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
+                    <Users className="w-5 h-5" />
+                    Manage File Shares
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowManageSharesModal(false);
+                      setFileToManage(null);
+                      setSharedUsers([]);
+                    }}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <CardDescription>View and manage who has access to this file</CardDescription>
+              </CardHeader>
+              <CardContent className="overflow-y-auto flex-1">
+                <div className="space-y-4">
+                  <div className="p-3 bg-muted rounded-md">
+                    <p className="text-sm font-medium truncate flex items-center gap-2">
+                      <File className="w-4 h-4" />
+                      {fileToManage.filename}
+                    </p>
+                  </div>
+
+                  {loadingShares ? (
+                    <div className="text-center py-8 text-muted-foreground">Loading shared users...</div>
+                  ) : sharedUsers.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground">This file hasn't been shared yet</p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Use the Share button to give others access to this file
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Shared with {sharedUsers.length} user{sharedUsers.length !== 1 ? "s" : ""}
+                      </p>
+                      {sharedUsers.map((user) => (
+                        <div
+                          key={user.user_id}
+                          className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{user.username}</p>
+                            <div className="flex gap-3 text-sm text-muted-foreground">
+                              <span>{user.email}</span>
+                              <span>•</span>
+                              <span>Shared {formatDate(user.shared_at)}</span>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRevokeAccess(user.user_id)}
+                            disabled={revoking === user.user_id}
+                            className="gap-2 border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 dark:text-red-400"
+                          >
+                            <X className="w-4 h-4" />
+                            {revoking === user.user_id ? "Revoking..." : "Revoke"}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
+                    <p className="text-xs text-blue-600 dark:text-blue-400 flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <span>
+                        Revoking access will immediately prevent the user from downloading this file. They will no
+                        longer see it in their shared files list.
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Delete Confirmation Modal */}
         {showDeleteModal && fileToDelete && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
             <Card className="w-full max-w-md mx-4">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-destructive">

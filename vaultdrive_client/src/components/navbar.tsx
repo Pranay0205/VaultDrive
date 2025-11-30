@@ -74,11 +74,18 @@ export default function Navbar({ children }: NavbarProps) {
                 </a>
               </li>
               {isLoggedIn && (
-                <li>
-                  <a href="/files" className="hover:text-primary transition-colors">
-                    Files
-                  </a>
-                </li>
+                <>
+                  <li>
+                    <a href="/files" className="hover:text-primary transition-colors">
+                      Files
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/shared" className="hover:text-primary transition-colors">
+                      Shared
+                    </a>
+                  </li>
+                </>
               )}
               <li>
                 <a href="/about" className="hover:text-primary transition-colors">
@@ -107,6 +114,7 @@ export default function Navbar({ children }: NavbarProps) {
                   <DropdownMenuItem>Profile</DropdownMenuItem>
                   <DropdownMenuItem>Settings</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/files")}>My Files</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/shared")}>Shared With Me</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
                 </DropdownMenuContent>

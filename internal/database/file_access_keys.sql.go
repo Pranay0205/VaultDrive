@@ -73,3 +73,73 @@ func (q *Queries) GetFileAccessKey(ctx context.Context, arg GetFileAccessKeyPara
 	)
 	return i, err
 }
+
+const getFileAccessKeysByFile = `-- name: GetFileAccessKeysByFile :many
+SELECT id, file_id, user_id, wrapped_key, created_at FROM file_access_keys
+WHERE file_id = $1
+ORDER BY created_at DESC
+`
+
+func (q *Queries) GetFileAccessKeysByFile(ctx context.Context, fileID uuid.NullUUID) ([]FileAccessKey, error) {
+	rows, err := q.db.QueryContext(ctx, getFileAccessKeysByFile, fileID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FileAccessKey
+	for rows.Next() {
+		var i FileAccessKey
+		if err := rows.Scan(
+			&i.ID,
+			&i.FileID,
+			&i.UserID,
+			&i.WrappedKey,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getFileAccessKeysByUser = `-- name: GetFileAccessKeysByUser :many
+SELECT id, file_id, user_id, wrapped_key, created_at FROM file_access_keys
+WHERE user_id = $1
+ORDER BY created_at DESC
+`
+
+func (q *Queries) GetFileAccessKeysByUser(ctx context.Context, userID uuid.NullUUID) ([]FileAccessKey, error) {
+	rows, err := q.db.QueryContext(ctx, getFileAccessKeysByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FileAccessKey
+	for rows.Next() {
+		var i FileAccessKey
+		if err := rows.Scan(
+			&i.ID,
+			&i.FileID,
+			&i.UserID,
+			&i.WrappedKey,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

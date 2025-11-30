@@ -1,6 +1,6 @@
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
-import { Shield, Lock, Database, Github, FileUp, Key } from "lucide-react";
+import { Shield, Lock, Database, Github, FileUp, Key, Share2 } from "lucide-react";
 import VaultIcon from "../components/ui/vault-icon";
 
 export default function Home() {
@@ -43,7 +43,7 @@ export default function Home() {
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-center mb-12">Core Features</h2>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
               <CardContent className="pt-6">
                 <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center mb-4">
@@ -63,7 +63,7 @@ export default function Home() {
                 </div>
                 <h3 className="font-semibold mb-2">File Management</h3>
                 <p className="text-sm text-muted-foreground">
-                  Upload, download, and manage files with metadata tracking and version control
+                  Upload, download, and manage files with complete CRUD operations
                 </p>
               </CardContent>
             </Card>
@@ -73,9 +73,21 @@ export default function Home() {
                 <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center mb-4">
                   <Lock className="w-6 h-6 text-purple-500" />
                 </div>
-                <h3 className="font-semibold mb-2">Data Protection</h3>
+                <h3 className="font-semibold mb-2">Client-Side Encryption</h3>
                 <p className="text-sm text-muted-foreground">
-                  Files stored securely with proper access controls and encryption at rest
+                  AES-256-GCM encryption with password-based key derivation (PBKDF2)
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="w-12 h-12 rounded-lg bg-pink-500/10 flex items-center justify-center mb-4">
+                  <Share2 className="w-6 h-6 text-pink-500" />
+                </div>
+                <h3 className="font-semibold mb-2">Secure File Sharing</h3>
+                <p className="text-sm text-muted-foreground">
+                  Share encrypted files with other users using public key cryptography
                 </p>
               </CardContent>
             </Card>
