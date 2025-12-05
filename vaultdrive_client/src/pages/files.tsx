@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import {
   Upload,
   Download,
@@ -45,30 +51,48 @@ export default function Files() {
   // Password-based encryption states
   const [encryptionPassword, setEncryptionPassword] = useState("");
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [passwordAction, setPasswordAction] = useState<"upload" | "download" | null>(null);
-  const [pendingDownload, setPendingDownload] = useState<{ fileId: string; filename: string; metadata: string } | null>(
-    null
-  );
+  const [passwordAction, setPasswordAction] = useState<
+    "upload" | "download" | null
+  >(null);
+  const [pendingDownload, setPendingDownload] = useState<{
+    fileId: string;
+    filename: string;
+    metadata: string;
+  } | null>(null);
 
   // Metadata visibility
   const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set());
 
   // Delete confirmation
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [fileToDelete, setFileToDelete] = useState<{ id: string; filename: string } | null>(null);
+  const [fileToDelete, setFileToDelete] = useState<{
+    id: string;
+    filename: string;
+  } | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   // File sharing
   const [showShareModal, setShowShareModal] = useState(false);
-  const [fileToShare, setFileToShare] = useState<{ id: string; filename: string } | null>(null);
+  const [fileToShare, setFileToShare] = useState<{
+    id: string;
+    filename: string;
+  } | null>(null);
   const [recipientEmail, setRecipientEmail] = useState("");
   const [sharing, setSharing] = useState(false);
 
   // Manage shares
   const [showManageSharesModal, setShowManageSharesModal] = useState(false);
-  const [fileToManage, setFileToManage] = useState<{ id: string; filename: string } | null>(null);
+  const [fileToManage, setFileToManage] = useState<{
+    id: string;
+    filename: string;
+  } | null>(null);
   const [sharedUsers, setSharedUsers] = useState<
-    Array<{ user_id: string; username: string; email: string; shared_at: string }>
+    Array<{
+      user_id: string;
+      username: string;
+      email: string;
+      shared_at: string;
+    }>
   >([]);
   const [loadingShares, setLoadingShares] = useState(false);
   const [revoking, setRevoking] = useState<string | null>(null);
@@ -133,8 +157,8 @@ export default function Files() {
     setShowPasswordModal(true);
   };
 
-  const performUpload = async (password: string) => {
-    if (!selectedFile) return;
+  const performUpload = async (password: string): Promise<boolean> => {
+    if (!selectedFile) return false;
 
     setUploading(true);
     setError("");
@@ -144,10 +168,28 @@ export default function Files() {
       const salt = generateSalt();
 
       // 2. Derive encryption key from password + salt
+      console.log(
+        "Deriving key for upload with password length:",
+        password.length
+      );
       const encryptionKey = await deriveKeyFromPassword(password, salt, 100000);
 
+      // Debug: Export key
+      const exportedKey = await window.crypto.subtle.exportKey(
+        "raw",
+        encryptionKey
+      );
+      const keyBytes = new Uint8Array(exportedKey);
+      console.log(
+        "Derived Key for Upload (first 5 bytes):",
+        Array.from(keyBytes.slice(0, 5))
+      );
+
       // 3. Encrypt the file
-      const { encryptedData, iv } = await encryptFile(selectedFile, encryptionKey);
+      const { encryptedData, iv } = await encryptFile(
+        selectedFile,
+        encryptionKey
+      );
 
       // 4. Prepare FormData with encrypted file
       const formData = new FormData();
@@ -163,7 +205,8 @@ export default function Files() {
 
       // 6. Add wrapped key (for now, we store the key derivation info)
       // In a full implementation, this would be the file key wrapped with user's public key
-      const wrappedKey = arrayBufferToBase64(salt) + ":" + arrayBufferToBase64(iv);
+      const wrappedKey =
+        arrayBufferToBase64(salt) + ":" + arrayBufferToBase64(iv);
       formData.append("wrapped_key", wrappedKey);
 
       // 7. Upload to server
@@ -179,48 +222,59 @@ export default function Files() {
       if (!response.ok) {
         if (response.status === 401) {
           navigate("/login");
-          return;
+          return false;
         }
         throw new Error("Failed to upload file");
       }
 
       // Clear selected file and refresh list
       setSelectedFile(null);
-      const fileInput = document.getElementById("file-input") as HTMLInputElement;
+      const fileInput = document.getElementById(
+        "file-input"
+      ) as HTMLInputElement;
       if (fileInput) fileInput.value = "";
 
       await fetchFiles();
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload file");
+      return false;
     } finally {
       setUploading(false);
     }
   };
 
-  const handleDownload = async (fileId: string, filename: string, metadata: string) => {
+  const handleDownload = async (
+    fileId: string,
+    filename: string,
+    metadata: string
+  ) => {
     // Request password for decryption
     setPendingDownload({ fileId, filename, metadata });
     setPasswordAction("download");
     setShowPasswordModal(true);
   };
 
-  const performDownload = async (password: string) => {
-    if (!pendingDownload) return;
+  const performDownload = async (password: string): Promise<boolean> => {
+    if (!pendingDownload) return false;
 
     try {
       // 1. Fetch encrypted file from server
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:8080/files/download?id=${pendingDownload.fileId}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `http://localhost:8080/files/${pendingDownload.fileId}/download`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         if (response.status === 401) {
           navigate("/login");
-          return;
+          return false;
         }
         throw new Error("Failed to download file");
       }
@@ -231,20 +285,59 @@ export default function Files() {
         metadataStr = pendingDownload.metadata;
       }
 
+      console.log("Metadata String:", metadataStr);
+
       // 3. Parse metadata to get salt and IV
-      const metadataObj = JSON.parse(metadataStr);
+      let metadataObj;
+      try {
+        metadataObj = JSON.parse(metadataStr);
+      } catch (e) {
+        console.error("Failed to parse metadata JSON:", metadataStr, e);
+        throw new Error("Invalid file metadata format");
+      }
+
+      console.log("Metadata Object:", metadataObj);
+
+      if (!metadataObj.salt || !metadataObj.iv) {
+        console.error("Missing salt or iv in metadata:", metadataObj);
+        throw new Error("Missing encryption metadata");
+      }
+
       const salt = new Uint8Array(base64ToArrayBuffer(metadataObj.salt));
       const iv = new Uint8Array(base64ToArrayBuffer(metadataObj.iv));
 
+      console.log("Salt length:", salt.length);
+      console.log("IV length:", iv.length);
+
+      if (salt.length !== 16)
+        console.warn("Warning: Salt length is not 16 bytes:", salt.length);
+      if (iv.length !== 12)
+        console.warn("Warning: IV length is not 12 bytes:", iv.length);
+
       // 4. Derive encryption key from password + salt
+      console.log("Deriving key with password length:", password.length);
       const encryptionKey = await deriveKeyFromPassword(password, salt, 100000);
+
+      // Debug: Export key to verify consistency (only first few bytes)
+      const exportedKey = await window.crypto.subtle.exportKey(
+        "raw",
+        encryptionKey
+      );
+      const keyBytes = new Uint8Array(exportedKey);
+      console.log(
+        "Derived Key (first 5 bytes):",
+        Array.from(keyBytes.slice(0, 5))
+      );
 
       // 5. Get encrypted data
       const encryptedBlob = await response.blob();
       const encryptedData = await encryptedBlob.arrayBuffer();
+      console.log("Encrypted Data Size:", encryptedData.byteLength);
 
       // 6. Decrypt the file
+      console.log("Attempting decryption...");
       const decryptedData = await decryptFile(encryptedData, encryptionKey, iv);
+      console.log("Decryption successful. Size:", decryptedData.byteLength);
 
       // 7. Create blob and trigger download
       const decryptedBlob = new Blob([decryptedData]);
@@ -258,8 +351,15 @@ export default function Files() {
       document.body.removeChild(a);
 
       setPendingDownload(null);
+      return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to download or decrypt file. Check your password.");
+      console.error("Download/Decryption error:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to download or decrypt file. Check your password."
+      );
+      return false;
     }
   };
 
@@ -313,12 +413,15 @@ export default function Files() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:8080/files/${fileToDelete.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `http://localhost:8080/files/${fileToDelete.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -356,7 +459,9 @@ export default function Files() {
       // Get recipient's public key
       const token = localStorage.getItem("token");
       const publicKeyResponse = await fetch(
-        `http://localhost:8080/user/public-key?email=${encodeURIComponent(recipientEmail)}`,
+        `http://localhost:8080/user/public-key?email=${encodeURIComponent(
+          recipientEmail
+        )}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -381,17 +486,20 @@ export default function Files() {
       const wrappedKey = "placeholder_wrapped_key_" + Date.now();
 
       // Share the file
-      const shareResponse = await fetch(`http://localhost:8080/files/${fileToShare.id}/share`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          recipient_email: recipientEmail,
-          wrapped_key: wrappedKey,
-        }),
-      });
+      const shareResponse = await fetch(
+        `http://localhost:8080/files/${fileToShare.id}/share`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            recipient_email: recipientEmail,
+            wrapped_key: wrappedKey,
+          }),
+        }
+      );
 
       if (!shareResponse.ok) {
         const data = await shareResponse.json();
@@ -420,12 +528,15 @@ export default function Files() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:8080/files/${fileId}/shares`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `http://localhost:8080/files/${fileId}/shares`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -438,7 +549,9 @@ export default function Files() {
       const data = await response.json();
       setSharedUsers(data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load shared users");
+      setError(
+        err instanceof Error ? err.message : "Failed to load shared users"
+      );
     } finally {
       setLoadingShares(false);
     }
@@ -452,12 +565,15 @@ export default function Files() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:8080/files/${fileToManage.id}/revoke/${userId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `http://localhost:8080/files/${fileToManage.id}/revoke/${userId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -481,14 +597,18 @@ export default function Files() {
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">My Files</h1>
-          <p className="text-muted-foreground">Upload, download, and manage your files securely</p>
+          <p className="text-muted-foreground">
+            Upload, download, and manage your files securely
+          </p>
         </div>
 
         {/* Upload Section */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Upload File</CardTitle>
-            <CardDescription>Select a file from your device to upload to VaultDrive</CardDescription>
+            <CardDescription>
+              Select a file from your device to upload to VaultDrive
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -510,7 +630,8 @@ export default function Files() {
               </div>
               {selectedFile && (
                 <p className="text-sm text-muted-foreground">
-                  Selected: {selectedFile.name} ({formatFileSize(selectedFile.size)})
+                  Selected: {selectedFile.name} (
+                  {formatFileSize(selectedFile.size)})
                 </p>
               )}
             </div>
@@ -530,17 +651,23 @@ export default function Files() {
           <CardHeader>
             <CardTitle>Your Files</CardTitle>
             <CardDescription>
-              {loading ? "Loading files..." : `${files.length} file${files.length !== 1 ? "s" : ""} stored`}
+              {loading
+                ? "Loading files..."
+                : `${files.length} file${files.length !== 1 ? "s" : ""} stored`}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading your files...</div>
+              <div className="text-center py-8 text-muted-foreground">
+                Loading your files...
+              </div>
             ) : files.length === 0 ? (
               <div className="text-center py-12">
                 <File className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                 <p className="text-muted-foreground">No files uploaded yet</p>
-                <p className="text-sm text-muted-foreground mt-2">Upload your first file to get started</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Upload your first file to get started
+                </p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -549,13 +676,18 @@ export default function Files() {
                   const metadata = parseMetadata(file.metadata);
 
                   return (
-                    <div key={file.id} className="rounded-lg border bg-card overflow-hidden">
+                    <div
+                      key={file.id}
+                      className="rounded-lg border bg-card overflow-hidden"
+                    >
                       {/* Main File Row */}
                       <div className="flex items-center justify-between p-4 hover:bg-accent/50 transition-colors">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <File className="w-5 h-5 text-muted-foreground shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{file.filename}</p>
+                            <p className="font-medium truncate">
+                              {file.filename}
+                            </p>
                             <div className="flex gap-3 text-sm text-muted-foreground">
                               <span>{formatFileSize(file.file_size)}</span>
                               <span>•</span>
@@ -594,7 +726,9 @@ export default function Files() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleShareClick(file.id, file.filename)}
+                            onClick={() =>
+                              handleShareClick(file.id, file.filename)
+                            }
                             className="gap-2 border-purple-500 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950 dark:text-purple-400"
                           >
                             <Share2 className="w-4 h-4" />
@@ -602,7 +736,9 @@ export default function Files() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleManageSharesClick(file.id, file.filename)}
+                            onClick={() =>
+                              handleManageSharesClick(file.id, file.filename)
+                            }
                             className="gap-2 border-orange-500 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950 dark:text-orange-400"
                           >
                             <Users className="w-4 h-4" />
@@ -610,7 +746,13 @@ export default function Files() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDownload(file.id, file.filename, file.metadata)}
+                            onClick={() =>
+                              handleDownload(
+                                file.id,
+                                file.filename,
+                                file.metadata
+                              )
+                            }
                             className="gap-2 border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 dark:text-blue-400"
                           >
                             <Download className="w-4 h-4" />
@@ -618,7 +760,9 @@ export default function Files() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDeleteClick(file.id, file.filename)}
+                            onClick={() =>
+                              handleDeleteClick(file.id, file.filename)
+                            }
                             className="gap-2 border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 dark:text-red-400"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -638,14 +782,20 @@ export default function Files() {
                             <div className="grid gap-3 text-sm">
                               {/* Algorithm */}
                               <div className="flex justify-between items-start">
-                                <span className="text-muted-foreground">Algorithm:</span>
-                                <span className="font-mono font-medium">{metadata.algorithm || "N/A"}</span>
+                                <span className="text-muted-foreground">
+                                  Algorithm:
+                                </span>
+                                <span className="font-mono font-medium">
+                                  {metadata.algorithm || "N/A"}
+                                </span>
                               </div>
 
                               {/* Salt */}
                               {metadata.salt && (
                                 <div className="flex justify-between items-start">
-                                  <span className="text-muted-foreground">Salt (Key Derivation):</span>
+                                  <span className="text-muted-foreground">
+                                    Salt (Key Derivation):
+                                  </span>
                                   <span className="font-mono text-xs break-all max-w-[200px] text-right">
                                     {maskKey(metadata.salt)}
                                   </span>
@@ -655,7 +805,9 @@ export default function Files() {
                               {/* IV */}
                               {metadata.iv && (
                                 <div className="flex justify-between items-start">
-                                  <span className="text-muted-foreground">IV (Initialization Vector):</span>
+                                  <span className="text-muted-foreground">
+                                    IV (Initialization Vector):
+                                  </span>
                                   <span className="font-mono text-xs break-all max-w-[200px] text-right">
                                     {maskKey(metadata.iv)}
                                   </span>
@@ -664,8 +816,12 @@ export default function Files() {
 
                               {/* File ID */}
                               <div className="flex justify-between items-start">
-                                <span className="text-muted-foreground">File ID:</span>
-                                <span className="font-mono text-xs break-all max-w-[200px] text-right">{file.id}</span>
+                                <span className="text-muted-foreground">
+                                  File ID:
+                                </span>
+                                <span className="font-mono text-xs break-all max-w-[200px] text-right">
+                                  {file.id}
+                                </span>
                               </div>
                             </div>
 
@@ -673,8 +829,8 @@ export default function Files() {
                               <p className="text-xs text-blue-600 dark:text-blue-400 flex items-start gap-2">
                                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                                 <span>
-                                  This file is encrypted with AES-256-GCM. You need your password to decrypt and
-                                  download it.
+                                  This file is encrypted with AES-256-GCM. You
+                                  need your password to decrypt and download it.
                                 </span>
                               </p>
                             </div>
@@ -696,7 +852,9 @@ export default function Files() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Lock className="w-5 h-5" />
-                  {passwordAction === "upload" ? "Encrypt File" : "Decrypt File"}
+                  {passwordAction === "upload"
+                    ? "Encrypt File"
+                    : "Decrypt File"}
                 </CardTitle>
                 <CardDescription>
                   {passwordAction === "upload"
@@ -705,6 +863,12 @@ export default function Files() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {error && (
+                  <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{error}</span>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <label className="text-sm font-medium flex items-center gap-2">
                     <Key className="w-4 h-4" />
@@ -742,7 +906,9 @@ export default function Files() {
                     disabled={!encryptionPassword}
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                   >
-                    {passwordAction === "upload" ? "Encrypt & Upload" : "Decrypt & Download"}
+                    {passwordAction === "upload"
+                      ? "Encrypt & Upload"
+                      : "Decrypt & Download"}
                   </Button>
                 </div>
               </CardContent>
@@ -772,7 +938,10 @@ export default function Files() {
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
-                <CardDescription>Share this file with another user by entering their email address</CardDescription>
+                <CardDescription>
+                  Share this file with another user by entering their email
+                  address
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="p-3 bg-muted rounded-md">
@@ -806,7 +975,8 @@ export default function Files() {
                   <p className="text-xs text-blue-600 dark:text-blue-400 flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                     <span>
-                      The recipient must have a VaultDrive account. They will receive access to download this file.
+                      The recipient must have a VaultDrive account. They will
+                      receive access to download this file.
                     </span>
                   </p>
                 </div>
@@ -859,7 +1029,9 @@ export default function Files() {
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
-                <CardDescription>View and manage who has access to this file</CardDescription>
+                <CardDescription>
+                  View and manage who has access to this file
+                </CardDescription>
               </CardHeader>
               <CardContent className="overflow-y-auto flex-1">
                 <div className="space-y-4">
@@ -871,11 +1043,15 @@ export default function Files() {
                   </div>
 
                   {loadingShares ? (
-                    <div className="text-center py-8 text-muted-foreground">Loading shared users...</div>
+                    <div className="text-center py-8 text-muted-foreground">
+                      Loading shared users...
+                    </div>
                   ) : sharedUsers.length === 0 ? (
                     <div className="text-center py-8">
                       <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                      <p className="text-muted-foreground">This file hasn't been shared yet</p>
+                      <p className="text-muted-foreground">
+                        This file hasn't been shared yet
+                      </p>
                       <p className="text-sm text-muted-foreground mt-2">
                         Use the Share button to give others access to this file
                       </p>
@@ -883,7 +1059,8 @@ export default function Files() {
                   ) : (
                     <div className="space-y-2">
                       <p className="text-sm font-medium text-muted-foreground">
-                        Shared with {sharedUsers.length} user{sharedUsers.length !== 1 ? "s" : ""}
+                        Shared with {sharedUsers.length} user
+                        {sharedUsers.length !== 1 ? "s" : ""}
                       </p>
                       {sharedUsers.map((user) => (
                         <div
@@ -891,7 +1068,9 @@ export default function Files() {
                           className="flex items-center justify-between p-3 rounded-lg border bg-card"
                         >
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{user.username}</p>
+                            <p className="font-medium truncate">
+                              {user.username}
+                            </p>
                             <div className="flex gap-3 text-sm text-muted-foreground">
                               <span>{user.email}</span>
                               <span>•</span>
@@ -906,7 +1085,9 @@ export default function Files() {
                             className="gap-2 border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 dark:text-red-400"
                           >
                             <X className="w-4 h-4" />
-                            {revoking === user.user_id ? "Revoking..." : "Revoke"}
+                            {revoking === user.user_id
+                              ? "Revoking..."
+                              : "Revoke"}
                           </Button>
                         </div>
                       ))}
@@ -917,8 +1098,9 @@ export default function Files() {
                     <p className="text-xs text-blue-600 dark:text-blue-400 flex items-start gap-2">
                       <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                       <span>
-                        Revoking access will immediately prevent the user from downloading this file. They will no
-                        longer see it in their shared files list.
+                        Revoking access will immediately prevent the user from
+                        downloading this file. They will no longer see it in
+                        their shared files list.
                       </span>
                     </p>
                   </div>
@@ -938,20 +1120,23 @@ export default function Files() {
                   Delete File
                 </CardTitle>
                 <CardDescription>
-                  Are you sure you want to delete this file? This action cannot be undone.
+                  Are you sure you want to delete this file? This action cannot
+                  be undone.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="p-3 bg-muted rounded-md">
-                  <p className="text-sm font-medium truncate">{fileToDelete.filename}</p>
+                  <p className="text-sm font-medium truncate">
+                    {fileToDelete.filename}
+                  </p>
                 </div>
 
                 <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
                   <p className="text-xs text-destructive flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                     <span>
-                      The encrypted file will be permanently deleted from the server. You will not be able to recover
-                      it.
+                      The encrypted file will be permanently deleted from the
+                      server. You will not be able to recover it.
                     </span>
                   </p>
                 </div>
@@ -968,7 +1153,12 @@ export default function Files() {
                   >
                     Cancel
                   </Button>
-                  <Button variant="destructive" onClick={handleDeleteConfirm} disabled={deleting} className="flex-1">
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteConfirm}
+                    disabled={deleting}
+                    className="flex-1"
+                  >
                     {deleting ? "Deleting..." : "Delete File"}
                   </Button>
                 </div>
@@ -983,16 +1173,19 @@ export default function Files() {
   async function handlePasswordSubmit() {
     if (!encryptionPassword) return;
 
-    setShowPasswordModal(false);
     const password = encryptionPassword;
-    setEncryptionPassword("");
+    let success = false;
 
     if (passwordAction === "upload") {
-      await performUpload(password);
+      success = await performUpload(password);
     } else if (passwordAction === "download") {
-      await performDownload(password);
+      success = await performDownload(password);
     }
 
-    setPasswordAction(null);
+    if (success) {
+      setShowPasswordModal(false);
+      setEncryptionPassword("");
+      setPasswordAction(null);
+    }
   }
 }
