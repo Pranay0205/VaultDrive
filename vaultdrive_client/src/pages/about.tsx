@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import { Shield, Users, Target, Github } from "lucide-react";
 import { Button } from "../components/ui/button";
 import VaultIcon from "../components/ui/vault-icon";
@@ -12,9 +18,12 @@ export default function About() {
           <div className="flex items-center justify-center mb-4">
             <VaultIcon className="w-20 h-20 drop-shadow-xl" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">About VaultDrive</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            About VaultDrive
+          </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            A secure file storage solution built as a college project demonstrating modern web development practices
+            A secure file storage solution built as a college project
+            demonstrating modern web development practices
           </p>
         </div>
 
@@ -30,25 +39,35 @@ export default function About() {
           </CardHeader>
           <CardContent className="space-y-4 text-muted-foreground">
             <p>
-              In today's digital age, data security and privacy have become paramount concerns. With increasing cyber
-              threats and data breaches, there's a growing need for secure file storage solutions that individuals can
-              trust with their sensitive information.
+              In today's digital age, data security and privacy have become
+              paramount concerns. With increasing cyber threats and data
+              breaches, there's a growing need for secure file storage solutions
+              that individuals can trust with their sensitive information.
             </p>
             <p>
-              VaultDrive was created to address these concerns by implementing industry-standard security practices in a
-              practical, real-world application. Our goal was to build a system that not only stores files securely but
-              also demonstrates best practices in:
+              VaultDrive was created to address these concerns by implementing
+              industry-standard security practices in a practical, real-world
+              application. Our goal was to build a system that not only stores
+              files securely but also demonstrates best practices in:
             </p>
             <ul className="list-disc list-inside space-y-2 ml-4">
-              <li>Secure authentication using JWT tokens and bcrypt password hashing</li>
-              <li>RESTful API design with proper error handling and validation</li>
+              <li>
+                Secure authentication using JWT tokens and bcrypt password
+                hashing
+              </li>
+              <li>
+                RESTful API design with proper error handling and validation
+              </li>
               <li>Database management with type-safe queries using SQLC</li>
               <li>Modern frontend development with React and TypeScript</li>
-              <li>Responsive UI design with Tailwind CSS and shadcn/ui components</li>
+              <li>
+                Responsive UI design with Tailwind CSS and shadcn/ui components
+              </li>
             </ul>
             <p>
-              This project serves as a comprehensive learning experience, covering the full stack of web
-              development—from database design and backend API development to frontend user interface and user
+              This project serves as a comprehensive learning experience,
+              covering the full stack of web development—from database design
+              and backend API development to frontend user interface and user
               experience design.
             </p>
           </CardContent>
@@ -75,11 +94,14 @@ export default function About() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">Pranay Ghuge</h3>
-                    <p className="text-sm text-muted-foreground">Full Stack Developer</p>
+                    <p className="text-sm text-muted-foreground">
+                      Full Stack Developer
+                    </p>
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Backend architecture, API development, database design, and security implementation
+                  Full Stack Development, System Architecture, Security
+                  Implementation, and UI/UX Design
                 </p>
               </div>
 
@@ -91,11 +113,14 @@ export default function About() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">Arundhati Das</h3>
-                    <p className="text-sm text-muted-foreground">Full Stack Developer</p>
+                    <p className="text-sm text-muted-foreground">
+                      Full Stack Developer
+                    </p>
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Frontend development, UI/UX design, component architecture, and integration
+                  Full Stack Development, System Architecture, Security
+                  Implementation, and UI/UX Design
                 </p>
               </div>
             </div>
@@ -111,7 +136,9 @@ export default function About() {
               </div>
               <CardTitle>Technology Stack</CardTitle>
             </div>
-            <CardDescription>Built with modern, industry-standard technologies</CardDescription>
+            <CardDescription>
+              Built with modern, industry-standard technologies
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-3 gap-6">
@@ -152,7 +179,9 @@ export default function About() {
         <Card>
           <CardHeader>
             <CardTitle>Key Features</CardTitle>
-            <CardDescription>What makes VaultDrive secure and user-friendly</CardDescription>
+            <CardDescription>
+              What makes VaultDrive secure and user-friendly
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 gap-4">
@@ -161,7 +190,8 @@ export default function About() {
                 <div>
                   <h4 className="font-semibold mb-1">Secure Authentication</h4>
                   <p className="text-sm text-muted-foreground">
-                    JWT-based authentication with refresh tokens and bcrypt password hashing
+                    JWT-based authentication with refresh tokens and bcrypt
+                    password hashing
                   </p>
                 </div>
               </div>
@@ -187,7 +217,9 @@ export default function About() {
                 <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
                 <div>
                   <h4 className="font-semibold mb-1">Theme Support</h4>
-                  <p className="text-sm text-muted-foreground">Dark and light mode with persistent user preference</p>
+                  <p className="text-sm text-muted-foreground">
+                    Dark and light mode with persistent user preference
+                  </p>
                 </div>
               </div>
             </div>
@@ -199,7 +231,9 @@ export default function About() {
           <Button
             size="lg"
             className="gap-2 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white"
-            onClick={() => window.open("https://github.com/Pranay0205/VaultDrive", "_blank")}
+            onClick={() =>
+              window.open("https://github.com/Pranay0205/VaultDrive", "_blank")
+            }
           >
             <Github className="w-5 h-5" />
             View Source Code
