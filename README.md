@@ -1,4 +1,15 @@
-# VaultDrive
+<div align="center">
+    <img src="screenshots/logo.svg" alt="VaultDrive Logo" width="120">
+    <h1>VaultDrive</h1>
+    <p><em>Your Personal Zero-Knowledge Cloud Storage</em></p>
+    <p>
+        <img src="https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go">
+        <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
+        <img src="https://img.shields.io/badge/AES--256--GCM-Encrypted-green?style=for-the-badge" alt="Encrypted">
+    </p>
+</div>
+
+<br>
 
 A secure, self-hosted file storage backend written in Go. Think of it like a personal Dropbox, but with a heavy focus on encryption and privacy.
 
