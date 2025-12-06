@@ -46,7 +46,7 @@ export async function encryptFile(
       iv: iv,
     },
     key,
-    fileBuffer
+    fileBuffer as ArrayBuffer
   );
 
   return {
@@ -61,7 +61,11 @@ export async function encryptFile(
 }
 
 // Decrypt a file using AES-256-GCM
-export async function decryptFile(encryptedData: ArrayBuffer, key: CryptoKey, iv: Uint8Array): Promise<ArrayBuffer> {
+export async function decryptFile(
+  encryptedData: ArrayBuffer,
+  key: CryptoKey,
+  iv: Uint8Array
+): Promise<ArrayBuffer> {
   try {
     const decryptedData = await window.crypto.subtle.decrypt(
       {
@@ -110,10 +114,13 @@ export async function deriveKeyFromPassword(
   const encoder = new TextEncoder();
   const passwordBuffer = encoder.encode(password);
 
-  const keyMaterial = await window.crypto.subtle.importKey("raw", passwordBuffer, { name: "PBKDF2" }, false, [
-    "deriveBits",
-    "deriveKey",
-  ]);
+  const keyMaterial = await window.crypto.subtle.importKey(
+    "raw",
+    passwordBuffer,
+    { name: "PBKDF2" },
+    false,
+    ["deriveBits", "deriveKey"]
+  );
 
   // Derive AES key from password
   return await window.crypto.subtle.deriveKey(
@@ -152,7 +159,7 @@ export function base64ToArrayBuffer(base64: string): ArrayBuffer {
   for (let i = 0; i < binaryString.length; i++) {
     bytes[i] = binaryString.charCodeAt(i);
   }
-  return bytes.buffer;
+  return bytes.buffer as ArrayBuffer;
 }
 
 // Helper: Create a Blob from decrypted data
@@ -239,7 +246,11 @@ export async function encryptMetadata(
 /**
  * Decrypt metadata retrieved from server
  */
-export async function decryptMetadata(encryptedMetadata: string, key: CryptoKey, iv: string): Promise<object> {
+export async function decryptMetadata(
+  encryptedMetadata: string,
+  key: CryptoKey,
+  iv: string
+): Promise<object> {
   const encryptedBuffer = base64ToArrayBuffer(encryptedMetadata);
   const ivBuffer = base64ToArrayBuffer(iv);
 
@@ -264,7 +275,10 @@ export async function hashFile(data: ArrayBuffer): Promise<string> {
 }
 
 // Verify file integrity
-export async function verifyFileIntegrity(data: ArrayBuffer, expectedHash: string): Promise<boolean> {
+export async function verifyFileIntegrity(
+  data: ArrayBuffer,
+  expectedHash: string
+): Promise<boolean> {
   const actualHash = await hashFile(data);
   return actualHash === expectedHash;
 }
