@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import { Lock, Mail, User, Eye, EyeOff } from "lucide-react";
 import VaultIcon from "../components/ui/vault-icon";
+import { API_URL } from "../utils/api";
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -31,7 +38,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8080/login", {
+      const response = await fetch(`${API_URL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -48,7 +55,10 @@ export default function Login() {
       // Store tokens in localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("refresh_token", data.refresh_token);
-      localStorage.setItem("user", JSON.stringify({ username: data.username, email: data.email }));
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ username: data.username, email: data.email })
+      );
 
       // Redirect to home or dashboard
       window.location.href = "/";
@@ -65,7 +75,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8080/register", {
+      const response = await fetch(`${API_URL}/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -107,11 +117,17 @@ export default function Login() {
           <CardHeader>
             <CardTitle>{isLogin ? "Login" : "Create Account"}</CardTitle>
             <CardDescription>
-              {isLogin ? "Enter your credentials to access your vault" : "Register for a new VaultDrive account"}
+              {isLogin
+                ? "Enter your credentials to access your vault"
+                : "Register for a new VaultDrive account"}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {error && <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
+            {error && (
+              <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                {error}
+              </div>
+            )}
 
             {isLogin ? (
               <form onSubmit={handleLogin} className="space-y-4">
@@ -123,7 +139,9 @@ export default function Login() {
                       type="email"
                       placeholder="your@email.com"
                       value={loginData.email}
-                      onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                      onChange={(e) =>
+                        setLoginData({ ...loginData, email: e.target.value })
+                      }
                       required
                       className="w-full pl-10 pr-4 py-2 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                     />
@@ -138,7 +156,9 @@ export default function Login() {
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={loginData.password}
-                      onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                      onChange={(e) =>
+                        setLoginData({ ...loginData, password: e.target.value })
+                      }
                       required
                       className="w-full pl-10 pr-10 py-2 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                     />
@@ -147,12 +167,20 @@ export default function Login() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={loading}>
+                <Button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={loading}
+                >
                   {loading ? "Logging in..." : "Login"}
                 </Button>
               </form>
@@ -165,7 +193,12 @@ export default function Login() {
                       type="text"
                       placeholder="John"
                       value={registerData.first_name}
-                      onChange={(e) => setRegisterData({ ...registerData, first_name: e.target.value })}
+                      onChange={(e) =>
+                        setRegisterData({
+                          ...registerData,
+                          first_name: e.target.value,
+                        })
+                      }
                       required
                       className="w-full px-3 py-2 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                     />
@@ -176,7 +209,12 @@ export default function Login() {
                       type="text"
                       placeholder="Doe"
                       value={registerData.last_name}
-                      onChange={(e) => setRegisterData({ ...registerData, last_name: e.target.value })}
+                      onChange={(e) =>
+                        setRegisterData({
+                          ...registerData,
+                          last_name: e.target.value,
+                        })
+                      }
                       required
                       className="w-full px-3 py-2 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                     />
@@ -191,7 +229,12 @@ export default function Login() {
                       type="text"
                       placeholder="johndoe"
                       value={registerData.username}
-                      onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })}
+                      onChange={(e) =>
+                        setRegisterData({
+                          ...registerData,
+                          username: e.target.value,
+                        })
+                      }
                       required
                       className="w-full pl-10 pr-4 py-2 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                     />
@@ -206,7 +249,12 @@ export default function Login() {
                       type="email"
                       placeholder="your@email.com"
                       value={registerData.email}
-                      onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
+                      onChange={(e) =>
+                        setRegisterData({
+                          ...registerData,
+                          email: e.target.value,
+                        })
+                      }
                       required
                       className="w-full pl-10 pr-4 py-2 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                     />
@@ -221,7 +269,12 @@ export default function Login() {
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={registerData.password}
-                      onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
+                      onChange={(e) =>
+                        setRegisterData({
+                          ...registerData,
+                          password: e.target.value,
+                        })
+                      }
                       required
                       className="w-full pl-10 pr-10 py-2 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                     />
@@ -230,12 +283,20 @@ export default function Login() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white" disabled={loading}>
+                <Button
+                  type="submit"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  disabled={loading}
+                >
                   {loading ? "Creating Account..." : "Create Account"}
                 </Button>
               </form>
@@ -250,7 +311,9 @@ export default function Login() {
                 }}
                 className="text-primary hover:underline"
               >
-                {isLogin ? "Don't have an account? Register" : "Already have an account? Login"}
+                {isLogin
+                  ? "Don't have an account? Register"
+                  : "Already have an account? Login"}
               </button>
             </div>
           </CardContent>

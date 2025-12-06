@@ -24,6 +24,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../utils/api";
 import {
   generateSalt,
   deriveKeyFromPassword,
@@ -117,7 +118,7 @@ export default function Files() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:8080/files", {
+      const response = await fetch(`${API_URL}/files`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -213,7 +214,7 @@ export default function Files() {
 
       // 7. Upload to server
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:8080/files/upload", {
+      const response = await fetch(`${API_URL}/files/upload`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -267,7 +268,7 @@ export default function Files() {
       // 1. Fetch encrypted file from server
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:8080/files/${pendingDownload.fileId}/download`,
+        `${API_URL}/files/${pendingDownload.fileId}/download`,
         {
           method: "GET",
           headers: {
@@ -420,15 +421,12 @@ export default function Files() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(
-        `http://localhost:8080/files/${fileToDelete.id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_URL}/files/${fileToDelete.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -466,7 +464,7 @@ export default function Files() {
       // Get recipient's public key
       const token = localStorage.getItem("token");
       const publicKeyResponse = await fetch(
-        `http://localhost:8080/user/public-key?email=${encodeURIComponent(
+        `${API_URL}/user/public-key?email=${encodeURIComponent(
           recipientEmail
         )}`,
         {
@@ -489,7 +487,7 @@ export default function Files() {
 
       // Share the file
       const shareResponse = await fetch(
-        `http://localhost:8080/files/${fileToShare.id}/share`,
+        `${API_URL}/files/${fileToShare.id}/share`,
         {
           method: "POST",
           headers: {
@@ -530,15 +528,12 @@ export default function Files() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(
-        `http://localhost:8080/files/${fileId}/shares`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_URL}/files/${fileId}/shares`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -568,7 +563,7 @@ export default function Files() {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:8080/files/${fileToManage.id}/revoke/${userId}`,
+        `${API_URL}/files/${fileToManage.id}/revoke/${userId}`,
         {
           method: "DELETE",
           headers: {

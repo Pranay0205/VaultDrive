@@ -1,9 +1,28 @@
 import { useState, useEffect } from "react";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Download, File, AlertCircle, Lock, Users, Share2, Key } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import {
+  Download,
+  File,
+  AlertCircle,
+  Lock,
+  Users,
+  Share2,
+  Key,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { deriveKeyFromPassword, decryptFile, base64ToArrayBuffer } from "../utils/crypto";
+import {
+  deriveKeyFromPassword,
+  decryptFile,
+  base64ToArrayBuffer,
+} from "../utils/crypto";
+import { API_URL } from "../utils/api";
 
 interface SharedFile {
   id: string;
@@ -23,9 +42,11 @@ export default function SharedFiles() {
   // Password modal for decryption
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [decryptionPassword, setDecryptionPassword] = useState("");
-  const [pendingDownload, setPendingDownload] = useState<{ fileId: string; filename: string; metadata: string } | null>(
-    null
-  );
+  const [pendingDownload, setPendingDownload] = useState<{
+    fileId: string;
+    filename: string;
+    metadata: string;
+  } | null>(null);
 
   useEffect(() => {
     // Check if user is logged in
@@ -45,7 +66,7 @@ export default function SharedFiles() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:8080/files/shared", {
+      const response = await fetch(`${API_URL}/files/shared`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -63,13 +84,19 @@ export default function SharedFiles() {
       const data = await response.json();
       setSharedFiles(data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load shared files");
+      setError(
+        err instanceof Error ? err.message : "Failed to load shared files"
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDownload = async (fileId: string, filename: string, metadata: string) => {
+  const handleDownload = async (
+    fileId: string,
+    filename: string,
+    metadata: string
+  ) => {
     // Request password for decryption
     setPendingDownload({ fileId, filename, metadata });
     setShowPasswordModal(true);
@@ -81,12 +108,15 @@ export default function SharedFiles() {
     try {
       // 1. Fetch encrypted file from server
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:8080/files/${pendingDownload.fileId}/download`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${API_URL}/files/${pendingDownload.fileId}/download`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -134,7 +164,11 @@ export default function SharedFiles() {
 
       setPendingDownload(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to download or decrypt file. Check your password.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to download or decrypt file. Check your password."
+      );
     }
   };
 
@@ -160,7 +194,9 @@ export default function SharedFiles() {
             </div>
             <div>
               <h1 className="text-3xl font-bold">Shared With Me</h1>
-              <p className="text-muted-foreground">Files that other users have shared with you</p>
+              <p className="text-muted-foreground">
+                Files that other users have shared with you
+              </p>
             </div>
           </div>
         </div>
@@ -183,18 +219,24 @@ export default function SharedFiles() {
             <CardDescription>
               {loading
                 ? "Loading shared files..."
-                : `${sharedFiles.length} file${sharedFiles.length !== 1 ? "s" : ""} shared with you`}
+                : `${sharedFiles.length} file${
+                    sharedFiles.length !== 1 ? "s" : ""
+                  } shared with you`}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading shared files...</div>
+              <div className="text-center py-8 text-muted-foreground">
+                Loading shared files...
+              </div>
             ) : sharedFiles.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-500/10 flex items-center justify-center">
                   <Share2 className="w-8 h-8 text-purple-500" />
                 </div>
-                <p className="text-muted-foreground font-medium">No shared files yet</p>
+                <p className="text-muted-foreground font-medium">
+                  No shared files yet
+                </p>
                 <p className="text-sm text-muted-foreground mt-2">
                   Files shared with you by other users will appear here
                 </p>
@@ -228,7 +270,13 @@ export default function SharedFiles() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleDownload(file.id, file.filename, file.encrypted_metadata)}
+                        onClick={() =>
+                          handleDownload(
+                            file.id,
+                            file.filename,
+                            file.encrypted_metadata
+                          )
+                        }
                         className="gap-2 border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 dark:text-blue-400"
                       >
                         <Download className="w-4 h-4" />
@@ -252,8 +300,9 @@ export default function SharedFiles() {
               <div className="space-y-1">
                 <p className="font-medium text-sm">About Shared Files</p>
                 <p className="text-sm text-muted-foreground">
-                  These files are encrypted and shared securely. You need to know the encryption password used by the
-                  file owner to decrypt and download these files.
+                  These files are encrypted and shared securely. You need to
+                  know the encryption password used by the file owner to decrypt
+                  and download these files.
                 </p>
               </div>
             </div>
@@ -270,7 +319,8 @@ export default function SharedFiles() {
                   Decrypt Shared File
                 </CardTitle>
                 <CardDescription>
-                  Enter the password used to encrypt this file. Ask the file owner if you don't know it.
+                  Enter the password used to encrypt this file. Ask the file
+                  owner if you don't know it.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -305,7 +355,8 @@ export default function SharedFiles() {
                   <p className="text-xs text-blue-600 dark:text-blue-400 flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                     <span>
-                      This file was encrypted by the owner. You need the same password they used to encrypt it.
+                      This file was encrypted by the owner. You need the same
+                      password they used to encrypt it.
                     </span>
                   </p>
                 </div>
