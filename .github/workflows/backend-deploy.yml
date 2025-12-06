@@ -9,7 +9,7 @@ on:
     workflow_dispatch:
 
 env:
-    AZURE_WEBAPP_NAME: vaultdrive-api # set this to your application's name
+    AZURE_WEBAPP_NAME: vaultdrive-api-dpeyaehhcqcbhufk # set this to your application's name
     IMAGE_NAME: vaultdrive-backend
 
 jobs:
