@@ -58,10 +58,40 @@ Here's a quick look at what you can hit:
 - `POST /files/{id}/share` - Share with another user
 - `DELETE /files/{id}/revoke/{user_id}` - Revoke access
 
-## How the Security Works
+## Security Architecture
 
-We don't trust the server with raw keys.
+VaultDrive is built on a **Zero-Knowledge** architecture. The server acts as a blind storage provider; it never sees your files in plaintext, nor does it have access to the keys required to decrypt them.
 
-1.  **On Register**: The server generates an RSA keypair. The private key is encrypted with your password (AES-256) before being saved to the DB.
-2.  **On Upload**: The client (frontend) encrypts the file with a random AES key. That key is then encrypted with the user's public key and sent to the server as a `wrapped_key`.
-3.  **On Share**: To share, the client fetches the recipient's public key, re-encrypts the file's AES key with it, and sends that new `wrapped_key` to the server.
+### 1. Cryptographic Primitives
+
+We use industry-standard algorithms to ensure data safety:
+
+- **File Encryption:** AES-256-GCM (Authenticated Encryption).
+- **Key Derivation:** PBKDF2 (SHA-256, 100,000 iterations) with unique salts.
+- **Key Exchange:** RSA-2048 (for sharing file keys between users).
+
+### 2. The Encryption Workflow (Upload)
+
+When a user uploads a file, the following happens entirely in the **browser**:
+
+1.  **Key Generation:** A random 32-byte AES key is generated.
+2.  **Encryption:** The file is encrypted using this key via AES-GCM. This produces the `Ciphertext`, an `IV` (Initialization Vector), and an `Auth Tag`.
+3.  **Key Wrapping:** The AES key itself is encrypted (wrapped) using the user's own Public Key (or derived from their password for personal files).
+4.  **Storage:** The browser sends the `Ciphertext`, `IV`, `Salt`, and `Wrapped Key` to the server. The server stores these blobs without knowing what they contain.
+
+### 3. Secure File Sharing
+
+Sharing is done without re-encrypting the entire file:
+
+1.  **Key Retrieval:** The owner's client retrieves the file's encrypted AES key and decrypts it locally.
+2.  **Public Key Fetch:** The client fetches the **Recipient's Public Key** from the server.
+3.  **Re-wrapping:** The client encrypts the file's AES key using the Recipient's Public Key.
+4.  **Access Grant:** This new "Wrapped Key" is sent to the server and stored in the `file_access_keys` table, granting the recipient cryptographic access to the file.
+
+### 4. Access Revocation
+
+Revoking access is immediate and cryptographic:
+
+- The owner requests revocation for a specific user.
+- The server performs a **hard delete** of the specific row in the `file_access_keys` table containing that user's wrapped key.
+- **Result:** Even if the user has the encrypted file blob, they no longer have the key required to decrypt it. Access is effectively lost.
