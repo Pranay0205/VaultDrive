@@ -19,6 +19,9 @@ jobs:
                   submodules: true
                   lfs: false
 
+            - name: Create .env file
+              run: echo "VITE_API_URL=https://vaultdrive-api-dpeyaehhcqcbhufk.centralus-01.azurewebsites.net" > vaultdrive_client/.env
+
             - name: Build And Deploy
               id: builddeploy
               uses: Azure/static-web-apps-deploy@v1
