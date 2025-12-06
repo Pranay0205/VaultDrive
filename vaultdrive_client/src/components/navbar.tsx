@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
@@ -106,37 +106,37 @@ export default function Navbar({ children }: NavbarProps) {
             </div>
             <ul className="flex gap-6">
               <li>
-                <a href="/" className="hover:text-primary transition-colors">
+                <Link to="/" className="hover:text-primary transition-colors">
                   Home
-                </a>
+                </Link>
               </li>
               {isLoggedIn && (
                 <>
                   <li>
-                    <a
-                      href="/files"
+                    <Link
+                      to="/files"
                       className="hover:text-primary transition-colors"
                     >
                       Files
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a
-                      href="/shared"
+                    <Link
+                      to="/shared"
                       className="hover:text-primary transition-colors"
                     >
                       Shared
-                    </a>
+                    </Link>
                   </li>
                 </>
               )}
               <li>
-                <a
-                  href="/about"
+                <Link
+                  to="/about"
                   className="hover:text-primary transition-colors"
                 >
                   About
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
