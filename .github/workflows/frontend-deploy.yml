@@ -20,7 +20,7 @@ jobs:
                   lfs: false
 
             - name: Create .env file
-              run: echo "VITE_API_URL=https://vaultdrive-api-dpeyaehhcqcbhufk.centralus-01.azurewebsites.net" > vaultdrive_client/.env
+              run: echo "VITE_API_URL=https://vaultdrive-backend.mangodesert-0d3ef58a.eastus.azurecontainerapps.io" > vaultdrive_client/.env
 
             - name: Build And Deploy
               id: builddeploy

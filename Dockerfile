@@ -27,7 +27,7 @@ FROM alpine:latest
 WORKDIR /root/
 
 # Install ca-certificates for HTTPS calls
-RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates bash
 
 # Copy the binary from the builder stage
 COPY --from=builder /app/vaultdrive-backend .
@@ -36,11 +36,7 @@ COPY --from=builder /app/vaultdrive-backend .
 COPY --from=builder /go/bin/goose .
 
 # Copy migration files
-COPY sql/schema ./sql/schema
-
-# Copy startup script
-COPY start.sh .
-RUN chmod +x start.sh
+COPY --from=builder /app/sql/schema ./sql/schema
 
 # Create uploads directory
 RUN mkdir -p uploads
@@ -48,5 +44,5 @@ RUN mkdir -p uploads
 # Expose the port
 EXPOSE 8080
 
-# Run the startup script
-CMD ["./start.sh"]
+# Run migrations and start app
+CMD ["/bin/sh", "-c", "./goose -dir sql/schema postgres \"$DB_URL\" up && ./vaultdrive-backend"]
