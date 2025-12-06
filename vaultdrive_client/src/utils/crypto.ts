@@ -43,7 +43,7 @@ export async function encryptFile(
   const encryptedData = await window.crypto.subtle.encrypt(
     {
       name: "AES-GCM",
-      iv: iv,
+      iv: iv as any,
     },
     key,
     fileBuffer as ArrayBuffer
@@ -70,7 +70,7 @@ export async function decryptFile(
     const decryptedData = await window.crypto.subtle.decrypt(
       {
         name: "AES-GCM",
-        iv: iv,
+        iv: iv as any,
       },
       key,
       encryptedData
@@ -231,7 +231,7 @@ export async function encryptMetadata(
   const encrypted = await window.crypto.subtle.encrypt(
     {
       name: "AES-GCM",
-      iv: iv,
+      iv: iv as any,
     },
     key,
     metadataBuffer
@@ -257,7 +257,7 @@ export async function decryptMetadata(
   const decrypted = await window.crypto.subtle.decrypt(
     {
       name: "AES-GCM",
-      iv: new Uint8Array(ivBuffer),
+      iv: new Uint8Array(ivBuffer) as any,
     },
     key,
     encryptedBuffer
