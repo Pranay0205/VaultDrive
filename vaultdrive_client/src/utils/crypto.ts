@@ -126,7 +126,7 @@ export async function deriveKeyFromPassword(
   return await window.crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
-      salt: salt,
+      salt: salt as any,
       iterations: iterations,
       hash: "SHA-256",
     },
