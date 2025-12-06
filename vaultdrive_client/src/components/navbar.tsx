@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -34,8 +34,38 @@ export default function Navbar({ children }: NavbarProps) {
     return { isLoggedIn: false, user: null };
   };
 
-  const [isLoggedIn, setIsLoggedIn] = useState(getInitialAuthState().isLoggedIn);
-  const [user, setUser] = useState<{ username: string; email: string } | null>(getInitialAuthState().user);
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    getInitialAuthState().isLoggedIn
+  );
+  const [user, setUser] = useState<{ username: string; email: string } | null>(
+    getInitialAuthState().user
+  );
+
+  // Listen for storage changes (for cross-tab sync) and custom auth events
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const authState = getInitialAuthState();
+      setIsLoggedIn(authState.isLoggedIn);
+      setUser(authState.user);
+    };
+
+    const handleAuthChange = () => {
+      const authState = getInitialAuthState();
+      setIsLoggedIn(authState.isLoggedIn);
+      setUser(authState.user);
+    };
+
+    // Listen for storage events (cross-tab)
+    window.addEventListener("storage", handleStorageChange);
+
+    // Listen for custom auth change event (same tab)
+    window.addEventListener("auth-change", handleAuthChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("auth-change", handleAuthChange);
+    };
+  }, []);
 
   const handleLogin = () => {
     navigate("/login");
@@ -47,6 +77,10 @@ export default function Navbar({ children }: NavbarProps) {
     localStorage.removeItem("user");
     setIsLoggedIn(false);
     setUser(null);
+
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new Event("auth-change"));
+
     navigate("/");
   };
 
@@ -63,7 +97,10 @@ export default function Navbar({ children }: NavbarProps) {
       <nav className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <div className="flex items-center gap-4">
+            <div
+              className="flex items-center gap-4 cursor-pointer"
+              onClick={() => navigate("/")}
+            >
               <VaultIcon className="w-10 h-10 m-1" />
               <h1 className="text-2xl font-bold text-primary">VaultDrive</h1>
             </div>
@@ -76,19 +113,28 @@ export default function Navbar({ children }: NavbarProps) {
               {isLoggedIn && (
                 <>
                   <li>
-                    <a href="/files" className="hover:text-primary transition-colors">
+                    <a
+                      href="/files"
+                      className="hover:text-primary transition-colors"
+                    >
                       Files
                     </a>
                   </li>
                   <li>
-                    <a href="/shared" className="hover:text-primary transition-colors">
+                    <a
+                      href="/shared"
+                      className="hover:text-primary transition-colors"
+                    >
                       Shared
                     </a>
                   </li>
                 </>
               )}
               <li>
-                <a href="/about" className="hover:text-primary transition-colors">
+                <a
+                  href="/about"
+                  className="hover:text-primary transition-colors"
+                >
                   About
                 </a>
               </li>
@@ -101,10 +147,14 @@ export default function Navbar({ children }: NavbarProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    <span className="text-sm font-medium">Hi, {user.username}</span>
+                    <span className="text-sm font-medium">
+                      Hi, {user.username}
+                    </span>
                     <Avatar>
                       <AvatarImage src="" alt={user.username} />
-                      <AvatarFallback>{getInitials(user.username)}</AvatarFallback>
+                      <AvatarFallback>
+                        {getInitials(user.username)}
+                      </AvatarFallback>
                     </Avatar>
                   </button>
                 </DropdownMenuTrigger>
@@ -113,10 +163,16 @@ export default function Navbar({ children }: NavbarProps) {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>Profile</DropdownMenuItem>
                   <DropdownMenuItem>Settings</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/files")}>My Files</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/shared")}>Shared With Me</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/files")}>
+                    My Files
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/shared")}>
+                    Shared With Me
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    Log out
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
